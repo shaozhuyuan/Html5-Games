@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flappy Coder | HTML5 Game</title>
+  <meta name="description" content="Keep the server alive! Fly through compiler errors and merge conflicts in this retro-classic programmer remake.">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Flappy Coder",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Keep the server alive! Fly through compiler errors and merge conflicts in this retro-classic programmer remake.",
+			"genre": "Action Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光装饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-xl px-4 flex flex-col items-center gap-5">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-brand-docker text-primary animate-pulse"></i>
+					Flappy Coder
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-4 mt-2 max-w-[480px]">
+				<div class="flex gap-2">
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Bugs Avoided</span>
+						<span id="score-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Best Run</span>
+						<span id="best-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+				</div>
+
+				<button
+					id="btn-trigger-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Restart
+				</button>
+			</div>
+
+			
+			<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+				<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+				<span id="toast-text">Copied to clipboard!</span>
+			</div>
+
+			
+			<div class="relative w-full aspect-[2/3] max-w-[400px] bg-zinc-950 border border-border/75 rounded-2xl shadow-2xl select-none overflow-hidden touch-none" id="game-canvas-container">
+				<canvas id="game-canvas" class="w-full h-full block"></canvas>
+				
+				
+				<div id="start-overlay" class="absolute inset-0 bg-background/55 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+					<div class="size-16 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center text-primary mb-4 animate-bounce">
+						<i class="ti ti-pointer-filled " style="font-size: 28px;"></i>
+					</div>
+					<h3 class="text-lg font-bold text-foreground">Fly Coder!</h3>
+					<p class="text-xs text-muted-foreground mt-2 max-w-[200px] leading-relaxed">
+						Press <kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">SPACE</kbd> or <strong class="text-foreground">Click/Tap</strong> to jump and start flying.
+					</p>
+				</div>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-3 p-3 rounded-2xl bg-card border shadow-sm max-w-[480px]">
+				<span class="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 ml-1">
+					<i class="ti ti-share-2 text-primary size-4"></i>
+					Invite friends to play:
+				</span>
+				<div class="flex gap-2">
+					<button
+						id="share-twitter"
+						title="Share on X (Twitter)"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-x " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-linkedin"
+						title="Share on LinkedIn"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-linkedin " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-copy-link"
+						title="Copy Game Link"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer relative"
+					>
+						<i class="ti ti-link " style="font-size: 16px;"></i>
+						<i class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
+					</button>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-md bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">How To Play</h3>
+					<button id="close-help" class="text-muted-foreground hover:text-foreground">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-4 leading-relaxed">
+					<p>Guide the Coder through the firewall and avoid code bugs!</p>
+					<ul class="list-disc pl-5 space-y-2">
+						<li>Click, Tap, or press <strong class="text-foreground">Spacebar</strong> to flap upwards.</li>
+						<li>Avoid collision with the descending compiler errors and code conflict walls (Pipes).</li>
+						<li>Every pipe wall you successfully bypass awards you <strong class="text-foreground">+1 Bug Fixed</strong>.</li>
+					</ul>
+					<div class="border-t pt-4">
+						<h4 class="font-semibold text-foreground mb-2">Retro Controls</h4>
+						<div class="grid grid-cols-2 gap-3 text-xs font-mono bg-muted/50 p-3 rounded-xl border border-border/50">
+							<div>Space / Click</div>
+							<div class="text-muted-foreground">Jump / Flap</div>
+							<div>R Key</div>
+							<div class="text-muted-foreground">Quick Restart</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-red-500">SERVER CRASHED! 👾</h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2">A compilation error caused the production server to crash.</p>
+				
+				<div class="my-6 p-4 rounded-xl bg-muted/40 border border-border/60">
+					<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Bugs Resolved</span>
+					<span id="gameover-score" class="text-3xl font-black tracking-wide text-primary">0</span>
+					<span class="block text-xs text-muted-foreground mt-2">
+						Best Run: <strong id="gameover-best" class="text-foreground">0</strong>
+					</span>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Run & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+					>
+						Reboot Server
+					</button>
+				</div>
+			</div>
+			<!-- 可索引的 SEO 说明 (解决 Canvas 薄内容缺陷) -->
+			<div class="w-full max-w-xl mt-6 p-5 rounded-2xl bg-card/65 border border-border/40 text-xs text-muted-foreground leading-relaxed space-y-3">
+				<h2 class="font-bold text-foreground text-sm">About Flappy Coder</h2>
+				<p>
+					<strong>Flappy Coder</strong> is a retro-style, programmer-themed arcade game based on the addictive flappy mechanics. Guide the flying website icon safely through columns of bugs, compilation hazards, and merge conflicts.
+				</p>
+				<p>
+					This mini-game is optimized for web browser play with intuitive spacebar/touch controls and adjusted difficulty curves. Test your reflexes, avoid server crashes, and see how long you can keep the production service active!
+				</p>
+			</div>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Flappy Coder",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Keep the server alive! Fly through compiler errors and merge conflicts in this retro-classic programmer remake.",
+			"genre": "Action Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 游戏状态配置
+	const canvas = document.getElementById('game-canvas');
+	const ctx = canvas.getContext('2d');
+	const startOverlay = document.getElementById('start-overlay');
+	const scoreVal = document.getElementById('score-val');
+	const bestVal = document.getElementById('best-val');
+	const modalHelp = document.getElementById('modal-help');
+	const modalGameOver = document.getElementById('modal-gameover');
+	const toast = document.getElementById('toast-message');
+	const toastText = document.getElementById('toast-text');
+
+	// 加载 favicon.svg 作为 Coder Bird 皮肤
+	const birdImg = new Image();
+	birdImg.src = 'https://ethelab.com/favicon.svg';
+
+	// 高分记录
+	let bestScore = parseInt(localStorage.getItem('flappycoder_best') || '0', 10);
+	bestVal.textContent = bestScore;
+
+	// 设置逻辑物理画布分辨率
+	const GAME_WIDTH = 400;
+	const GAME_HEIGHT = 600;
+	canvas.width = GAME_WIDTH;
+	canvas.height = GAME_HEIGHT;
+
+	// 游戏物理参数 (下调参数降低整体难度)
+	const GRAVITY = 0.32;
+	const JUMP_STRENGTH = -5.8;
+	const PIPE_SPEED = 2.0;
+	const PIPE_SPAWN_INTERVAL = 135; // 每隔多少帧生成一次管道 (横向距离更宽)
+	const GAP_SIZE = 165; // 管道开口高度 (空隙高度增加，更容易穿过)
+
+	let bird = {
+		x: 80,
+		y: 250,
+		radius: 14,
+		velocity: 0,
+		rotation: 0
+	};
+
+	let pipes = [];
+	let score = 0;
+	let frames = 0;
+	let gameState = 'idle'; // 'idle', 'playing', 'gameover'
+	let matrixLines = []; // 背景黑客帝国粒子背景
+
+	// 初始化背景代码瀑布流
+	function initMatrixBg() {
+		matrixLines = [];
+		const cols = 20;
+		for (let i = 0; i < cols; i++) {
+			matrixLines.push({
+				x: (GAME_WIDTH / cols) * i + 5,
+				y: Math.random() * GAME_HEIGHT - GAME_HEIGHT,
+				speed: 0.8 + Math.random() * 1.5,
+				chars: Array(8).fill(null).map(() => Math.random() < 0.5 ? '0' : '1')
+			});
+		}
+	}
+
+	// 键盘或点击触发飞跃
+	function flap() {
+		if (gameState === 'idle') {
+			gameState = 'playing';
+			startOverlay.classList.add('hidden');
+			bird.velocity = JUMP_STRENGTH;
+		} else if (gameState === 'playing') {
+			bird.velocity = JUMP_STRENGTH;
+		}
+	}
+
+	// 初始化/重置游戏
+	function resetGame() {
+		bird.x = 80;
+		bird.y = 250;
+		bird.velocity = 0;
+		bird.rotation = 0;
+		pipes = [];
+		score = 0;
+		frames = 0;
+		gameState = 'idle';
+		scoreVal.textContent = '0';
+		
+		startOverlay.classList.remove('hidden');
+		modalGameOver.classList.add('hidden');
+		initMatrixBg();
+	}
+
+	// 管道避开与碰撞检测逻辑
+	function updateGame() {
+		if (gameState === 'playing') {
+			frames++;
+			
+			// 鸟物理物理运动
+			bird.velocity += GRAVITY;
+			bird.y += bird.velocity;
+			
+			// 计算角度
+			if (bird.velocity < 3) {
+				bird.rotation = -0.2;
+			} else {
+				bird.rotation = Math.min(Math.PI / 2.5, bird.rotation + 0.05);
+			}
+
+			// 限制天空高度
+			if (bird.y - bird.radius < 0) {
+				bird.y = bird.radius;
+				bird.velocity = 0;
+			}
+
+			// 地面碰撞判定
+			if (bird.y + bird.radius >= GAME_HEIGHT - 40) {
+				triggerGameOver();
+			}
+
+			// 管道生成
+			if (frames % PIPE_SPAWN_INTERVAL === 0) {
+				// 随机开口中心高低
+				const minHeight = 100;
+				const maxHeight = GAME_HEIGHT - 40 - minHeight - GAP_SIZE;
+				const openY = minHeight + Math.random() * (maxHeight - minHeight);
+				
+				// 常见的报错标题
+				const titles = ['MERGE CONFLICT', '500 ERROR', 'BUG DETECTED', 'SEGFAULT', 'NULL POINTER', 'CRASH'];
+				const selectedTitle = titles[Math.floor(Math.random() * titles.length)];
+
+				pipes.push({
+					x: GAME_WIDTH,
+					openY: openY,
+					width: 54,
+					title: selectedTitle,
+					passed: false
+				});
+			}
+
+			// 管道运动与碰撞检测
+			for (let i = pipes.length - 1; i >= 0; i--) {
+				const p = pipes[i];
+				p.x -= PIPE_SPEED;
+
+				// 碰撞检测箱判定
+				const birdLeft = bird.x - bird.radius + 3;
+				const birdRight = bird.x + bird.radius - 3;
+				const birdTop = bird.y - bird.radius + 3;
+				const birdBottom = bird.y + bird.radius - 3;
+
+				// 上管道盒
+				if (birdRight > p.x && birdLeft < p.x + p.width) {
+					if (birdTop < p.openY || birdBottom > p.openY + GAP_SIZE) {
+						triggerGameOver();
+					}
+				}
+
+				// 加分机制
+				if (!p.passed && p.x + p.width < bird.x) {
+					p.passed = true;
+					score++;
+					scoreVal.textContent = score;
+				}
+
+				// 移出边界的管道进行销毁
+				if (p.x + p.width < 0) {
+					pipes.splice(i, 1);
+				}
+			}
+		}
+
+		// 运行黑客帝国代码流背景
+		matrixLines.forEach((line) => {
+			line.y += line.speed;
+			if (line.y > GAME_HEIGHT) {
+				line.y = -80;
+				line.speed = 0.8 + Math.random() * 1.5;
+			}
+		});
+	}
+
+	// 绘制全套 Canvas 内容
+	function draw() {
+		// 1. 填充深色底板背景
+		ctx.fillStyle = '#09090b';
+		ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+		// 2. 绘制代码瀑布背景
+		ctx.font = '10px monospace';
+		ctx.fillStyle = 'rgba(16, 185, 129, 0.15)'; // 淡淡的绿色
+		matrixLines.forEach((line) => {
+			line.chars.forEach((c, idx) => {
+				ctx.fillText(c, line.x, line.y + idx * 12);
+			});
+		});
+
+		// 3. 绘制管道
+		pipes.forEach((p) => {
+			// 渐变填充样式
+			const gradient = ctx.createLinearGradient(p.x, 0, p.x + p.width, 0);
+			gradient.addColorStop(0, '#ef4444'); // 鲜艳红色
+			gradient.addColorStop(0.5, '#b91c1c');
+			gradient.addColorStop(1, '#7f1d1d');
+
+			ctx.fillStyle = gradient;
+			ctx.strokeStyle = '#f87171';
+			ctx.lineWidth = 2;
+
+			// 上半部分防火墙管道
+			ctx.fillRect(p.x, 0, p.width, p.openY);
+			ctx.strokeRect(p.x, -2, p.width, p.openY + 2);
+			
+			// 下半部分防火墙管道
+			const lowerPipeHeight = GAME_HEIGHT - 40 - (p.openY + GAP_SIZE);
+			ctx.fillRect(p.x, p.openY + GAP_SIZE, p.width, lowerPipeHeight);
+			ctx.strokeRect(p.x, p.openY + GAP_SIZE, p.width, lowerPipeHeight + 2);
+
+			// 管道边缘法兰盖绘制
+			ctx.fillStyle = '#f87171';
+			ctx.fillRect(p.x - 3, p.openY - 14, p.width + 6, 14);
+			ctx.strokeRect(p.x - 3, p.openY - 14, p.width + 6, 14);
+			
+			ctx.fillRect(p.x - 3, p.openY + GAP_SIZE, p.width + 6, 14);
+			ctx.strokeRect(p.x - 3, p.openY + GAP_SIZE, p.width + 6, 14);
+
+			// 报错文字贴标
+			ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+			ctx.font = 'bold 8px monospace';
+			ctx.save();
+			ctx.translate(p.x + p.width / 2, p.openY - 30);
+			ctx.rotate(-Math.PI / 2);
+			ctx.fillText(p.title, -30, 3);
+			ctx.restore();
+		});
+
+		// 4. 绘制地面 (带二进制粒子)
+		ctx.fillStyle = '#18181b';
+		ctx.fillRect(0, GAME_HEIGHT - 40, GAME_WIDTH, 40);
+		
+		ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(0, GAME_HEIGHT - 40);
+		ctx.lineTo(GAME_WIDTH, GAME_HEIGHT - 40);
+		ctx.stroke();
+
+		// 二进制地面滚动条纹
+		ctx.fillStyle = 'rgba(16, 185, 129, 0.3)';
+		ctx.font = '9px monospace';
+		const groundScroll = (frames * PIPE_SPEED) % 80;
+		for (let i = -80; i < GAME_WIDTH + 80; i += 40) {
+			ctx.fillText('10101', i - groundScroll, GAME_HEIGHT - 16);
+		}
+
+		// 5. 绘制主角 (Coder Bird - favicon.svg)
+		ctx.save();
+		ctx.translate(bird.x, bird.y);
+		ctx.rotate(bird.rotation);
+
+		// 使用 favicon.svg 图片作为主角
+		const birdSize = bird.radius * 2.4;
+		ctx.drawImage(birdImg, -birdSize / 2, -birdSize / 2, birdSize, birdSize);
+
+		ctx.restore();
+	}
+
+	// 游戏主循环
+	function loop() {
+		updateGame();
+		draw();
+		requestAnimationFrame(loop);
+	}
+
+	// 触发 Game Over
+	function triggerGameOver() {
+		gameState = 'gameover';
+		const overScore = document.getElementById('gameover-score');
+		const overBest = document.getElementById('gameover-best');
+		const overTitle = document.getElementById('gameover-title');
+		const overSubtitle = document.getElementById('gameover-subtitle');
+		
+		overScore.textContent = score;
+		
+		let isNewRecord = false;
+		if (score > bestScore) {
+			isNewRecord = true;
+			bestScore = score;
+			localStorage.setItem('flappycoder_best', bestScore);
+			bestVal.textContent = bestScore;
+		}
+		
+		overBest.textContent = bestScore;
+
+		if (isNewRecord) {
+			overTitle.textContent = '🏆 NEW RECORD BREAK! 🚀';
+			overTitle.className = 'text-2xl font-black text-green-500 animate-pulse';
+			overSubtitle.textContent = 'Fantastic! You just successfully patched the production server!';
+		} else {
+			overTitle.textContent = 'SERVER CRASHED! 👾';
+			overTitle.className = 'text-2xl font-black text-red-500';
+			overSubtitle.textContent = 'A compilation error caused the production server to crash.';
+		}
+
+		modalGameOver.classList.remove('hidden');
+	}
+
+	// 提示信息 Toast 显示
+	function showToast(text) {
+		if (!toast || !toastText) return;
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 复制战绩文案
+	function copyScoreAndShare() {
+		const shareText = `Flappy Coder 🚀\n\nI successfully resolved ${score} compiler errors/bugs before the server crashed!\nBest Run: ${bestScore}\n\nPlay online free: https://ethelab.com/games`;
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('Score copied to clipboard!');
+		}).catch(() => {
+			showToast('Failed to copy score automatically');
+		});
+	}
+
+	// 绑定社交分享按钮
+	const GAME_URL = 'https://ethelab.com/games';
+
+	document.getElementById('share-twitter').addEventListener('click', () => {
+		const msg = `Flappy Coder 🚀 I fixed ${score} code conflicts! Can you keep the server alive? Play here:`;
+		window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(GAME_URL)}`, '_blank');
+	});
+
+	document.getElementById('share-linkedin').addEventListener('click', () => {
+		window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(GAME_URL)}`, '_blank');
+	});
+
+	document.getElementById('share-copy-link').addEventListener('click', () => {
+		const defIcon = document.getElementById('icon-link-default');
+		const succIcon = document.getElementById('icon-link-success');
+
+		navigator.clipboard.writeText(GAME_URL).then(() => {
+			defIcon.classList.add('hidden');
+			succIcon.classList.remove('hidden');
+			showToast('Game link copied to clipboard!');
+			setTimeout(() => {
+				defIcon.classList.remove('hidden');
+				succIcon.classList.add('hidden');
+			}, 2000);
+		});
+	});
+
+	// 事件监听器
+	window.addEventListener('keydown', (e) => {
+		if (e.code === 'Space') {
+			e.preventDefault();
+			flap();
+		}
+		if (e.code === 'KeyR') {
+			resetGame();
+		}
+	});
+
+	// 点击/触摸屏幕飞跃
+	const container = document.getElementById('game-canvas-container');
+	container.addEventListener('touchstart', (e) => {
+		flap();
+	}, { passive: true });
+
+	container.addEventListener('mousedown', (e) => {
+		flap();
+	});
+
+	// 重启控制
+	document.getElementById('btn-trigger-restart').addEventListener('click', resetGame);
+	document.getElementById('btn-play-again').addEventListener('click', resetGame);
+	document.getElementById('btn-share').addEventListener('click', copyScoreAndShare);
+	document.getElementById('btn-help').addEventListener('click', () => modalHelp.classList.remove('hidden'));
+	document.getElementById('close-help').addEventListener('click', () => modalHelp.classList.add('hidden'));
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelp) modalHelp.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 启动游戏
+	resetGame();
+	loop();
+
+</body>
+</html>

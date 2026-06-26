@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Leak | Geek Games | HTML5 Game</title>
+  <meta name="description" content="Optimize RAM garbage collection. Play Memory Leak, a developer-themed card matching game free and unblocked.">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+	/* 3D 翻牌样式类 */
+	.perspective {
+		perspective: 1000px;
+	}
+	.transform-style-3d {
+		transform-style: preserve-3d;
+	}
+	.backface-hidden {
+		backface-visibility: hidden;
+	}
+	.rotate-y-180 {
+		transform: rotateY(180deg);
+	}
+
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Memory Leak",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Optimize RAM garbage collection. Play Memory Leak, a developer-themed card matching game free and unblocked.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光装饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-md px-4 flex flex-col items-center gap-6">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-cpu text-primary animate-pulse"></i>
+					Memory Leak
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex flex-wrap items-center justify-between gap-4 bg-card border rounded-2xl p-4 shadow-sm">
+				<div class="flex items-center gap-2">
+					<span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Leak Rate:</span>
+					<div class="flex bg-muted/65 p-1 rounded-xl border border-border/40">
+						<button id="diff-easy" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm">
+							Slow
+						</button>
+						<button id="diff-medium" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							Normal
+						</button>
+						<button id="diff-hard" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							Fast
+						</button>
+					</div>
+				</div>
+
+				<button
+					id="btn-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Reset
+				</button>
+			</div>
+
+			
+			<div class="w-full bg-card border rounded-2xl p-4 shadow-sm space-y-3">
+				<div class="flex justify-between items-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
+					<span>RAM Usage</span>
+					<span id="ram-val" class="text-sm font-black text-green-500 transition-colors duration-300">0%</span>
+				</div>
+				<!-- 渐变色彩色条 -->
+				<div class="w-full h-4 bg-zinc-900 rounded-full overflow-hidden p-0.5 border border-zinc-800">
+					<div id="ram-progress" class="h-full w-0% bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-full transition-all duration-300 ease-out"></div>
+				</div>
+				<div class="flex justify-between text-[10px] text-muted-foreground/60 font-semibold uppercase">
+					<span>0% Stable</span>
+					<span>50% Warning</span>
+					<span>100% OOM CRASH</span>
+				</div>
+			</div>
+
+			
+			<div id="card-grid" class="w-full grid grid-cols-4 gap-3 bg-zinc-950 border border-border/80 rounded-2xl p-4 shadow-2xl select-none aspect-square">
+				<!-- 动态生成 16 张卡牌 -->
+			</div>
+
+			
+			<div class="w-full grid gap-4 text-xs text-muted-foreground leading-relaxed">
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-help text-primary" style="font-size: 16px;"></i>
+						How to Play
+					</h3>
+					<ul class="list-disc pl-4 space-y-1.5">
+						<li>Click on card to flip and reveal its technical icon.</li>
+						<li>Flip another card. If they match, they are cleared via <strong class="text-green-500">Garbage Collection (GC)</strong>, reducing RAM usage by <strong>-10%</strong>.</li>
+						<li>If they do not match, they flip back and increase RAM leak by <strong>+5%</strong>.</li>
+						<li>RAM usage also leaks automatically over time. Clear all pairs before RAM usage hits <strong>100% (Out Of Memory)</strong>!</li>
+					</ul>
+				</div>
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-cpu text-primary" style="font-size: 16px;"></i>
+						About Memory Leak
+					</h3>
+					<p>
+						<strong>Memory Leak</strong> is an intense card-matching puzzle designed with system memory management concepts. Instead of a simple timer, manage your browser's virtual memory footprint.
+					</p>
+					<p>
+						Match tech stacks (like 🐳 Docker, 🦀 Rust, 💾 Database, 🐛 Bug) while battling progressive leaks. Select <strong>Slow</strong>, <strong>Normal</strong>, or <strong>Fast</strong> leaks. Test your memory speed and see if you can achieve 0% garbage collected RAM.
+					</p>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-primary">GC SUCCESSFUL! 🚀</h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2">All memory spaces successfully collected and recycled.</p>
+				
+				<div class="my-6 p-4 rounded-xl bg-muted/40 border border-border/60">
+					<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Final RAM Status</span>
+					<span id="gameover-ram" class="text-3xl font-black text-primary">0% RAM</span>
+					<span id="gameover-stats-msg" class="block text-xs text-muted-foreground mt-2">
+						Memory Leak resolved without system panic.
+					</span>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95 cursor-pointer"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Log & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+					>
+						Re-Allocate (Play Again)
+					</button>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-help-detail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">Memory Leak Rules</h3>
+					<button id="close-help-detail" class="text-muted-foreground hover:text-foreground cursor-pointer">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-3 leading-relaxed">
+					<p>Prevent system memory overflow:</p>
+					<ul class="list-disc pl-5 space-y-1.5">
+						<li><strong>RAM Leak</strong>: RAM increases automatically by a small percentage every second.</li>
+						<li><strong>Matching Cards</strong>: Reclaims space via Garbage Collection, reducing RAM by <strong>-10%</strong>.</li>
+						<li><strong>Mismatch Cards</strong>: Adds <strong>+5%</strong> RAM and temporarily freezes the cards.</li>
+						<li><strong>OOM Crash</strong>: Hits 100% RAM before resolving all pairs, resulting in a heap crash.</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- Toast 浮层提示 -->
+		<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+			<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+			<span id="toast-text">Copied to clipboard!</span>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Memory Leak",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Optimize RAM garbage collection. Play Memory Leak, a developer-themed card matching game free and unblocked.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 内存卡牌的种类和对应 Emoji/颜色
+	const CARD_TYPES = [
+		{ id: 'docker', emoji: '🐳', name: 'Docker', bg: 'bg-blue-500/10 border-blue-500/35 text-blue-400' },
+		{ id: 'rust', emoji: '🦀', name: 'Rust', bg: 'bg-red-500/10 border-red-500/35 text-red-400' },
+		{ id: 'db', emoji: '💾', name: 'Database', bg: 'bg-green-500/10 border-green-500/35 text-green-400' },
+		{ id: 'bug', emoji: '🐛', name: 'Bug', bg: 'bg-yellow-500/10 border-yellow-500/35 text-yellow-400' },
+		{ id: 'deploy', emoji: '🚀', name: 'Deploy', bg: 'bg-purple-500/10 border-purple-500/35 text-purple-400' },
+		{ id: 'git', emoji: '🌴', name: 'Git', bg: 'bg-cyan-500/10 border-cyan-500/35 text-cyan-400' },
+		{ id: 'js', emoji: '🟨', name: 'JS', bg: 'bg-orange-500/10 border-orange-500/35 text-orange-400' },
+		{ id: 'py', emoji: '🐍', name: 'Python', bg: 'bg-indigo-500/10 border-indigo-500/35 text-indigo-400' }
+	];
+
+	// 难度速度级别
+	const RATES = {
+		easy: 1.0, // 每秒泄露 1%
+		medium: 2.0, // 每秒泄露 2%
+		hard: 3.5 // 每秒泄露 3.5%
+	};
+
+	let activeDiff = 'easy';
+	let leakRate = RATES.easy;
+
+	// 状态数据
+	let cards = [];
+	let flippedCards = [];
+	let ramUsage = 0;
+	let gameActive = false;
+	let timer = null;
+	let matchesCount = 0;
+
+	// DOM 引用
+	const cardGrid = document.getElementById('card-grid');
+	const ramVal = document.getElementById('ram-val');
+	const ramProgress = document.getElementById('ram-progress');
+	
+	const diffEasyBtn = document.getElementById('diff-easy');
+	const diffMediumBtn = document.getElementById('diff-medium');
+	const diffHardBtn = document.getElementById('diff-hard');
+
+	const btnRestart = document.getElementById('btn-restart');
+	const btnHelp = document.getElementById('btn-help');
+	const modalHelpDetail = document.getElementById('modal-help-detail');
+	const closeModalHelpDetail = document.getElementById('close-help-detail');
+	
+	let lockBoard = false; // 面板点击锁，防止 900ms 翻转卡牌延迟内点击第三张牌导致状态崩坏
+
+	
+	const modalGameOver = document.getElementById('modal-gameover');
+	const gameoverTitle = document.getElementById('gameover-title');
+	const gameoverSubtitle = document.getElementById('gameover-subtitle');
+	const gameoverRam = document.getElementById('gameover-ram');
+	const btnPlayAgain = document.getElementById('btn-play-again');
+	const btnShare = document.getElementById('btn-share');
+	
+	const toast = document.getElementById('toast-message');
+	const toastText = document.getElementById('toast-text');
+
+	// 难度按钮绑定
+	function selectDifficulty(diff) {
+		activeDiff = diff;
+		leakRate = RATES[diff];
+
+		const btns = [diffEasyBtn, diffMediumBtn, diffHardBtn];
+		btns.forEach(btn => {
+			btn.className = 'diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground';
+		});
+
+		const activeBtn = document.getElementById(`diff-${diff}`);
+		activeBtn.className = 'diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm';
+
+		resetGame();
+	}
+
+	diffEasyBtn.addEventListener('click', () => selectDifficulty('easy'));
+	diffMediumBtn.addEventListener('click', () => selectDifficulty('medium'));
+	diffHardBtn.addEventListener('click', () => selectDifficulty('hard'));
+
+	// 重置/初始化游戏
+	function resetGame() {
+		clearInterval(timer);
+		timer = null;
+		ramUsage = 0;
+		gameActive = false;
+		lockBoard = false;
+		matchesCount = 0;
+		flippedCards = [];
+		modalGameOver.classList.add('hidden');
+		modalHelpDetail.classList.add('hidden');
+
+		updateRamUI();
+		generateCards();
+	}
+
+	// 更新 RAM 进度条 UI
+	function updateRamUI() {
+		ramVal.textContent = Math.round(ramUsage) + '%';
+		ramProgress.style.width = ramUsage + '%';
+
+		// 根据数值大小变更状态颜色
+		if (ramUsage >= 80) {
+			ramVal.className = 'text-sm font-black text-red-500 transition-colors duration-300';
+			ramProgress.className = 'h-full bg-red-600 rounded-full transition-all duration-300 ease-out';
+		} else if (ramUsage >= 50) {
+			ramVal.className = 'text-sm font-black text-yellow-500 transition-colors duration-300';
+			ramProgress.className = 'h-full bg-yellow-500 rounded-full transition-all duration-300 ease-out';
+		} else {
+			ramVal.className = 'text-sm font-black text-green-500 transition-colors duration-300';
+			ramProgress.className = 'h-full bg-green-500 rounded-full transition-all duration-300 ease-out';
+		}
+	}
+
+	// 自动泄露时钟
+	function startLeakTimer() {
+		gameActive = true;
+		timer = setInterval(() => {
+			if (!gameActive) return;
+			
+			ramUsage += leakRate;
+			if (ramUsage >= 100) {
+				ramUsage = 100;
+				updateRamUI();
+				triggerOomCrash();
+			} else {
+				updateRamUI();
+			}
+		}, 1000);
+	}
+
+	// 生成卡牌数组，做成双份，洗牌
+	function generateCards() {
+		// 创建 16 张卡牌（8 对）
+		const tempCards = [];
+		CARD_TYPES.forEach((type) => {
+			tempCards.push({ ...type, uniqueId: type.id + '_1', isMatched: false });
+			tempCards.push({ ...type, uniqueId: type.id + '_2', isMatched: false });
+		});
+
+		// 洗牌
+		cards = tempCards.sort(() => Math.random() - 0.5);
+
+		// 清理网格并渲染
+		cardGrid.innerHTML = '';
+		cards.forEach((card, index) => {
+			const cardEl = document.createElement('button');
+			cardEl.type = 'button';
+			cardEl.className = 'group relative w-full h-full rounded-xl border border-zinc-800 bg-zinc-900 cursor-pointer overflow-hidden transition-all duration-300 transform-style-3d hover:border-zinc-600';
+			cardEl.setAttribute('data-index', index);
+
+			// 卡牌结构：内含背板与正面
+			cardEl.innerHTML = `
+				<!-- Back of card (未翻开) -->
+				<div class="absolute inset-0 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-zinc-500 font-mono font-bold text-lg backface-hidden transition-transform duration-300">
+					0x${index.toString(16).toUpperCase()}
+				</div>
+				<!-- Front of card (翻开) -->
+				<div class="absolute inset-0 flex flex-col items-center justify-center font-bold text-center rotate-y-180 backface-hidden transition-transform duration-300 ${card.bg}">
+					<span class="text-2xl sm:text-3xl">${card.emoji}</span>
+					<span class="text-[8px] uppercase tracking-wider mt-1 opacity-75">${card.name}</span>
+				</div>
+			`;
+
+			cardEl.addEventListener('click', () => handleCardClick(index, cardEl));
+			cardGrid.appendChild(cardEl);
+		});
+	}
+
+	// 翻牌事件
+	function handleCardClick(index, cardEl) {
+		if (lockBoard || isGameOver() || cards[index].isMatched || flippedCards.includes(index)) return;
+
+		// 首次翻开，启动定时器
+		if (!gameActive && ramUsage < 100) {
+			startLeakTimer();
+		}
+
+		// 翻开卡牌（添加 3D 旋转 CSS 效果）
+		const back = cardEl.querySelector('.backface-hidden:not(.rotate-y-180)');
+		const front = cardEl.querySelector('.rotate-y-180');
+		back.style.transform = 'rotateY(180deg)';
+		front.style.transform = 'rotateY(0deg)';
+
+		flippedCards.push(index);
+
+		if (flippedCards.length === 2) {
+			checkMatch();
+		}
+	}
+
+	// 匹配检测
+	function checkMatch() {
+		const idx1 = flippedCards[0];
+		const idx2 = flippedCards[1];
+		
+		const card1 = cards[idx1];
+		const card2 = cards[idx2];
+
+		const gridEls = cardGrid.querySelectorAll('button');
+		const el1 = gridEls[idx1];
+		const el2 = gridEls[idx2];
+
+		if (card1.id === card2.id) {
+			// 配对成功 (GC Garbage Collect)
+			card1.isMatched = true;
+			card2.isMatched = true;
+			matchesCount++;
+
+			// 降低 RAM 使用率（回收内存）
+			ramUsage = Math.max(0, ramUsage - 10);
+			updateRamUI();
+
+			// 给成功的卡牌添加微光效果
+			setTimeout(() => {
+				el1.className += ' ring-2 ring-green-500/50 scale-95 opacity-80';
+				el2.className += ' ring-2 ring-green-500/50 scale-95 opacity-80';
+			}, 300);
+
+			flippedCards = [];
+
+			// 检查是否全配对成功
+			if (matchesCount === CARD_TYPES.length) {
+				triggerVictory();
+			}
+		} else {
+			// 配对失败 (Memory Leak 增加)
+			lockBoard = true; // 锁定面板
+			ramUsage = Math.min(100, ramUsage + 5);
+			updateRamUI();
+
+			if (ramUsage >= 100) {
+				triggerOomCrash();
+				return;
+			}
+
+			// 给卡牌添加红色闪烁，然后翻转回去
+			setTimeout(() => {
+				el1.className += ' ring-2 ring-red-500/40';
+				el2.className += ' ring-2 ring-red-500/40';
+			}, 200);
+
+			setTimeout(() => {
+				const back1 = el1.querySelector('.backface-hidden:not(.rotate-y-180)');
+				const front1 = el1.querySelector('.rotate-y-180');
+				const back2 = el2.querySelector('.backface-hidden:not(.rotate-y-180)');
+				const front2 = el2.querySelector('.rotate-y-180');
+				
+				back1.style.transform = 'rotateY(0deg)';
+				front1.style.transform = 'rotateY(180deg)';
+				back2.style.transform = 'rotateY(0deg)';
+				front2.style.transform = 'rotateY(180deg)';
+				
+				el1.classList.remove('ring-2', 'ring-red-500/40');
+				el2.classList.remove('ring-2', 'ring-red-500/40');
+
+				flippedCards = [];
+				lockBoard = false; // 解锁
+			}, 900);
+		}
+	}
+
+	function isGameOver() {
+		return ramUsage >= 100 || matchesCount === CARD_TYPES.length;
+	}
+
+	// 内存泄漏崩溃
+	function triggerOomCrash() {
+		gameActive = false;
+		clearInterval(timer);
+
+		// 翻开所有牌露出红色炸弹
+		const gridEls = cardGrid.querySelectorAll('button');
+		cards.forEach((card, idx) => {
+			const back = gridEls[idx].querySelector('.backface-hidden:not(.rotate-y-180)');
+			const front = gridEls[idx].querySelector('.rotate-y-180');
+			back.style.transform = 'rotateY(180deg)';
+			front.style.transform = 'rotateY(0deg)';
+		});
+
+		gameoverTitle.textContent = 'OUT OF MEMORY! 👾';
+		gameoverTitle.className = 'text-2xl font-black text-red-500';
+		gameoverSubtitle.textContent = 'FATAL EXCEPTION: JavaScript heap out of memory.';
+		gameoverRam.textContent = '100% RAM';
+		gameoverRam.className = 'text-3xl font-black text-red-500';
+		document.getElementById('gameover-stats-msg').textContent = 'The garbage collector failed to reclaim heap space.';
+
+		setTimeout(() => {
+			modalGameOver.classList.remove('hidden');
+		}, 800);
+	}
+
+	// GC 回收胜利
+	function triggerVictory() {
+		gameActive = false;
+		clearInterval(timer);
+
+		gameoverTitle.textContent = 'GC SUCCESSFUL! 🚀';
+		gameoverTitle.className = 'text-2xl font-black text-green-500 animate-pulse';
+		gameoverSubtitle.textContent = 'System optimized. Leak resolved successfully.';
+		gameoverRam.textContent = Math.round(ramUsage) + '% RAM';
+		gameoverRam.className = 'text-3xl font-black text-green-500';
+		document.getElementById('gameover-stats-msg').textContent = `Garbage collection rate: ${activeDiff.toUpperCase()}.`;
+
+		setTimeout(() => {
+			modalGameOver.classList.remove('hidden');
+		}, 800);
+	}
+
+	// Toast
+	function showToast(text) {
+		if (!toast || !toastText) return;
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 战绩拷贝分享
+	function copyScoreAndShare() {
+		const ramText = document.getElementById('gameover-ram').textContent;
+		const statusText = matchesCount === CARD_TYPES.length ? 'RESOLVED 🚀' : 'CRASHED 👾';
+		const diffText = activeDiff.toUpperCase();
+
+		const shareText = `🧠 Memory Leak Card Game on EtheLab 💻\n\nGC Status: ${statusText}\nFinal RAM footprint: ${ramText}\nLeak Rate: ${diffText}\n\nCan you prevent the OOM crash? Play free: https://ethelab.com/games/memory`;
+		
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('GC performance report copied!');
+		}).catch(() => {
+			showToast('Failed to copy report.');
+		});
+	}
+
+	// 绑定监听器
+	btnRestart.addEventListener('click', resetGame);
+	btnPlayAgain.addEventListener('click', resetGame);
+	btnShare.addEventListener('click', copyScoreAndShare);
+
+	btnHelp.addEventListener('click', () => modalHelpDetail.classList.remove('hidden'));
+	closeModalHelpDetail.addEventListener('click', () => modalHelpDetail.classList.add('hidden'));
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelpDetail) modalHelpDetail.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 开始
+	resetGame();
+
+</body>
+</html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Snake | HTML5 Game</title>
+  <meta name="description" content="Hunt bugs and compile code packages to grow your code base. Watch out for compiler walls and infinite loops!">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Snake",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Hunt bugs and compile code packages to grow your code base. Watch out for compiler walls and infinite loops!",
+			"genre": "Retro Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光装饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-xl px-4 flex flex-col items-center gap-5">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-braces text-primary animate-pulse"></i>
+					Code Snake
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-4 mt-2 max-w-[440px]">
+				<div class="flex gap-2">
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Bugs Fixed</span>
+						<span id="score-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[80px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Best Build</span>
+						<span id="best-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+				</div>
+
+				<button
+					id="btn-trigger-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Restart
+				</button>
+			</div>
+
+			
+			<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+				<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+				<span id="toast-text">Copied to clipboard!</span>
+			</div>
+
+			
+			<div class="relative w-full aspect-square max-w-[400px] bg-zinc-950 border border-border/75 rounded-2xl shadow-2xl select-none overflow-hidden touch-none" id="game-canvas-container">
+				<canvas id="game-canvas" class="w-full h-full block"></canvas>
+				
+				
+				<div id="start-overlay" class="absolute inset-0 bg-background/55 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+					<div class="size-16 rounded-full border border-primary/20 bg-primary/10 flex items-center justify-center text-primary mb-4 animate-bounce">
+						<i class="ti ti-arrow-autofit-right " style="font-size: 28px;"></i>
+					</div>
+					<h3 class="text-lg font-bold text-foreground">Compile Code!</h3>
+					<p class="text-xs text-muted-foreground mt-2 max-w-[240px] leading-relaxed">
+						Press <kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">Arrow Keys</kbd> / <kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">WASD</kbd> or use the <strong class="text-foreground">D-Pad below</strong> to control the snake and start compilation.
+					</p>
+				</div>
+			</div>
+
+			
+			<div class="w-full max-w-[400px] grid grid-cols-3 gap-2 px-6 py-2 sm:hidden">
+				<div></div>
+				<button
+					id="dpad-up"
+					class="size-12 rounded-xl bg-card border flex items-center justify-center text-foreground active:bg-primary active:text-primary-foreground shadow-sm transition-colors mx-auto"
+				>
+					<i class="ti ti-chevron-up " style="font-size: 24px;"></i>
+				</button>
+				<div></div>
+
+				<button
+					id="dpad-left"
+					class="size-12 rounded-xl bg-card border flex items-center justify-center text-foreground active:bg-primary active:text-primary-foreground shadow-sm transition-colors mx-auto"
+				>
+					<i class="ti ti-chevron-left " style="font-size: 24px;"></i>
+				</button>
+				<div class="size-12 flex items-center justify-center text-muted-foreground font-bold text-xs font-mono">DPAD</div>
+				<button
+					id="dpad-right"
+					class="size-12 rounded-xl bg-card border flex items-center justify-center text-foreground active:bg-primary active:text-primary-foreground shadow-sm transition-colors mx-auto"
+				>
+					<i class="ti ti-chevron-right " style="font-size: 24px;"></i>
+				</button>
+
+				<div></div>
+				<button
+					id="dpad-down"
+					class="size-12 rounded-xl bg-card border flex items-center justify-center text-foreground active:bg-primary active:text-primary-foreground shadow-sm transition-colors mx-auto"
+				>
+					<i class="ti ti-chevron-down " style="font-size: 24px;"></i>
+				</button>
+				<div></div>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-3 p-3 rounded-2xl bg-card border shadow-sm max-w-[440px]">
+				<span class="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 ml-1">
+					<i class="ti ti-share-2 text-primary size-4"></i>
+					Invite friends to play:
+				</span>
+				<div class="flex gap-2">
+					<button
+						id="share-twitter"
+						title="Share on X (Twitter)"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-x " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-linkedin"
+						title="Share on LinkedIn"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-linkedin " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-copy-link"
+						title="Copy Game Link"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer relative"
+					>
+						<i class="ti ti-link " style="font-size: 16px;"></i>
+						<i class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
+					</button>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-md bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">How To Play</h3>
+					<button id="close-help" class="text-muted-foreground hover:text-foreground">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-4 leading-relaxed">
+					<p>Control the Code Snake to resolve bugs and grow your software codebase!</p>
+					<ul class="list-disc pl-5 space-y-2">
+						<li>Use <strong class="text-foreground">Arrow keys</strong> or <strong class="text-foreground">WASD</strong> to move the snake.</li>
+						<li>Eat red blinking <strong class="text-red-500">Bugs</strong> to resolve them.</li>
+						<li>Each bug resolved adds a technology module (e.g. <code>rust</code>, <code>docker</code>, <code>npm</code>) to your body.</li>
+						<li>Do not run into the walls or your own tail (infinite loops) otherwise your project crashes!</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-red-500">INFINITE LOOP! 👾</h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2">The program entered a stack overflow / infinite loop crash.</p>
+				
+				<div class="my-6 p-4 rounded-xl bg-muted/40 border border-border/60">
+					<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Bugs Resolved</span>
+					<span id="gameover-score" class="text-3xl font-black tracking-wide text-primary">0</span>
+					<span class="block text-xs text-muted-foreground mt-2">
+						Best Run: <strong id="gameover-best" class="text-foreground">0</strong>
+					</span>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Build & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+					>
+						Refactor Code
+					</button>
+				</div>
+			</div>
+			<!-- 可索引的 SEO 说明 (解决 Canvas 薄内容缺陷) -->
+			<div class="w-full max-w-xl mt-6 p-5 rounded-2xl bg-card/65 border border-border/40 text-xs text-muted-foreground leading-relaxed space-y-3">
+				<h2 class="font-bold text-foreground text-sm">About Code Snake</h2>
+				<p>
+					<strong>Code Snake</strong> is a web-based coding game inspired by the classic retro snake arcade. Control your snake to catch bugs and build code modules (like <code>rust</code>, <code>docker</code>, and <code>git</code>) without hitting boundaries or tail loops.
+				</p>
+				<p>
+					Play free in your desktop or mobile browser with keyboard inputs or an on-screen D-Pad. Improve your programming logic, scale your snake length, and see how clean you can compile your virtual codebase!
+				</p>
+			</div>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Snake",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Hunt bugs and compile code packages to grow your code base. Watch out for compiler walls and infinite loops!",
+			"genre": "Retro Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 游戏状态配置
+	const canvas = document.getElementById('game-canvas');
+	const ctx = canvas.getContext('2d');
+	const startOverlay = document.getElementById('start-overlay');
+	const scoreVal = document.getElementById('score-val');
+	const bestVal = document.getElementById('best-val');
+	const modalHelp = document.getElementById('modal-help');
+	const modalGameOver = document.getElementById('modal-gameover');
+	const toast = document.getElementById('toast-message');
+	const toastText = document.getElementById('toast-text');
+
+	// 历史最好成绩与历史序列
+	let bestScore = parseInt(localStorage.getItem('codesnake_best') || '0', 10);
+	bestVal.textContent = bestScore;
+
+	// Canvas 尺寸参数
+	const CANVAS_SIZE = 400;
+	canvas.width = CANVAS_SIZE;
+	canvas.height = CANVAS_SIZE;
+
+	const GRID_COUNT = 20; // 20x20 的网格
+	const GRID_SIZE = CANVAS_SIZE / GRID_COUNT; // 每一格 20px
+
+	// 蛇身体吃掉 Bug 时会依次新增的标签
+	const TECH_WORDS = ['const', 'let', 'npm', 'git', 'ts', 'rust', 'go', 'css', 'docker', 'vite', 'astro', 'next', 'html', 'sql', 'py', 'aws', 'api', 'http', 'class', 'await', 'async'];
+
+	let snake = [];
+	let direction = { x: 0, y: 0 };
+	let nextDirection = { x: 0, y: 0 };
+	let food = { x: 0, y: 0 };
+	let score = 0;
+	let gameState = 'idle'; // 'idle', 'playing', 'gameover'
+	let gameInterval = null;
+	const BASE_SPEED = 125; // 刷新时间间距 (毫秒)
+	let currentSpeed = BASE_SPEED;
+
+	// 生成随机 Bug 食物位置，确保不在蛇身上
+	function spawnFood() {
+		while (true) {
+			const rx = Math.floor(Math.random() * GRID_COUNT);
+			const ry = Math.floor(Math.random() * GRID_COUNT);
+			
+			// 检查是否与蛇身重合
+			let overlap = false;
+			for (let part of snake) {
+				if (part.x === rx && part.y === ry) {
+					overlap = true;
+					break;
+				}
+			}
+			
+			if (!overlap) {
+				food = { x: rx, y: ry };
+				break;
+			}
+		}
+	}
+
+	// 键盘及 D-pad 改变方向，防自咬
+	function changeDirection(dx, dy) {
+		if (gameState === 'idle') {
+			direction = { x: dx, y: dy };
+			nextDirection = { x: dx, y: dy };
+			gameState = 'playing';
+			startOverlay.classList.add('hidden');
+			startGameLoop();
+		} else if (gameState === 'playing') {
+			// 防自咬逻辑 (不能反向)
+			if (dx !== -direction.x && dy !== -direction.y) {
+				nextDirection = { x: dx, y: dy };
+			}
+		}
+	}
+
+	// 开始定时器循环
+	function startGameLoop() {
+		if (gameInterval) clearInterval(gameInterval);
+		gameInterval = setInterval(gameStep, currentSpeed);
+	}
+
+	// 重置/初始化
+	function resetGame() {
+		// 初始蛇身：3节
+		snake = [
+			{ x: 10, y: 10 },
+			{ x: 9, y: 10 },
+			{ x: 8, y: 10 }
+		];
+		direction = { x: 0, y: 0 };
+		nextDirection = { x: 0, y: 0 };
+		score = 0;
+		currentSpeed = BASE_SPEED;
+		scoreVal.textContent = '0';
+		
+		spawnFood();
+		gameState = 'idle';
+		
+		if (gameInterval) clearInterval(gameInterval);
+		startOverlay.classList.remove('hidden');
+		modalGameOver.classList.add('hidden');
+		draw();
+	}
+
+	// 核心单步物理逻辑
+	function gameStep() {
+		if (gameState !== 'playing') return;
+
+		direction = nextDirection;
+		const head = snake[0];
+		
+		// 计算下一帧头部坐标
+		const newHead = {
+			x: head.x + direction.x,
+			y: head.y + direction.y
+		};
+
+		// 碰撞墙壁检测 (Compiler Error)
+		if (newHead.x < 0 || newHead.x >= GRID_COUNT || newHead.y < 0 || newHead.y >= GRID_COUNT) {
+			triggerGameOver('COMPILER ERROR! You hit the environment limits.');
+			return;
+		}
+
+		// 碰撞自己检测 (Infinite Loop)
+		for (let part of snake) {
+			if (part.x === newHead.x && part.y === newHead.y) {
+				triggerGameOver('INFINITE LOOP! You bit your own tail.');
+				return;
+			}
+		}
+
+		// 蛇头前进
+		snake.unshift(newHead);
+
+		// 吃掉食物判断
+		if (newHead.x === food.x && newHead.y === food.y) {
+			score++;
+			scoreVal.textContent = score;
+			spawnFood();
+			
+			// 随着身体变长，逐渐略微加快移动速度以增加挑战度
+			if (currentSpeed > 75) {
+				currentSpeed -= 2.5;
+				startGameLoop();
+			}
+		} else {
+			// 未吃到食物移除蛇尾保持长度
+			snake.pop();
+		}
+
+		draw();
+	}
+
+	// 全局 Canvas 绘制
+	function draw() {
+		// 1. 底板填充
+		ctx.fillStyle = '#09090b';
+		ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+		// 2. 绘制淡淡的代码格子水印背景
+		ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+		ctx.font = '7px monospace';
+		for (let x = 0; x < GRID_COUNT; x++) {
+			for (let y = 0; y < GRID_COUNT; y++) {
+				ctx.fillText('{}', x * GRID_SIZE + 4, y * GRID_SIZE + 13);
+			}
+		}
+
+		// 3. 绘制食物 (Blinking Bug)
+		const pulseRadius = GRID_SIZE / 2 - 2 + Math.sin(Date.now() * 0.015) * 1.5;
+		
+		// 亮红色 Bug 外焰发光圈
+		ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+		ctx.beginPath();
+		ctx.arc(food.x * GRID_SIZE + GRID_SIZE / 2, food.y * GRID_SIZE + GRID_SIZE / 2, pulseRadius + 3, 0, Math.PI * 2);
+		ctx.fill();
+
+		// Bug 主体
+		ctx.fillStyle = '#ef4444';
+		ctx.fillRect(food.x * GRID_SIZE + 4, food.y * GRID_SIZE + 4, GRID_SIZE - 8, GRID_SIZE - 8);
+
+		// 4. 绘制蛇身与蛇头
+		snake.forEach((part, index) => {
+			const isHead = index === 0;
+			
+			if (isHead) {
+				// 绘制蛇头：荧光绿带发光与眼睛
+				ctx.fillStyle = '#22c55e';
+				ctx.fillRect(part.x * GRID_SIZE + 1, part.y * GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+
+				// 双眼
+				ctx.fillStyle = '#ffffff';
+				if (direction.y !== 0) {
+					ctx.fillRect(part.x * GRID_SIZE + 4, part.y * GRID_SIZE + 8, 3, 3);
+					ctx.fillRect(part.x * GRID_SIZE + 13, part.y * GRID_SIZE + 8, 3, 3);
+				} else {
+					ctx.fillRect(part.x * GRID_SIZE + 10, part.y * GRID_SIZE + 4, 3, 3);
+					ctx.fillRect(part.x * GRID_SIZE + 10, part.y * GRID_SIZE + 13, 3, 3);
+				}
+			} else {
+				// 绘制蛇身：不同的绿色层级配上技术关键词
+				const colorIndex = (index - 1) % 4;
+				const colors = ['#16a34a', '#15803d', '#166534', '#14532d'];
+				ctx.fillStyle = colors[colorIndex];
+				ctx.fillRect(part.x * GRID_SIZE + 1.5, part.y * GRID_SIZE + 1.5, GRID_SIZE - 3, GRID_SIZE - 3);
+
+				// 渲染技术词汇片段 (每隔两段显示一个)
+				if (index % 2 === 1) {
+					const word = TECH_WORDS[(index - 1) % TECH_WORDS.length];
+					ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+					ctx.font = 'bold 5px monospace';
+					ctx.fillText(word, part.x * GRID_SIZE + 3, part.y * GRID_SIZE + GRID_SIZE - 6);
+				}
+			}
+		});
+	}
+
+	// 帧渲染支持 Bug 食物动态闪烁
+	function renderLoop() {
+		if (gameState === 'idle') {
+			draw();
+		}
+		requestAnimationFrame(renderLoop);
+	}
+
+	// 触发 Game Over
+	function triggerGameOver(reason) {
+		gameState = 'gameover';
+		if (gameInterval) clearInterval(gameInterval);
+
+		const overScore = document.getElementById('gameover-score');
+		const overBest = document.getElementById('gameover-best');
+		const overTitle = document.getElementById('gameover-title');
+		const overSubtitle = document.getElementById('gameover-subtitle');
+		
+		overScore.textContent = score;
+		
+		let isNewRecord = false;
+		if (score > bestScore) {
+			isNewRecord = true;
+			bestScore = score;
+			localStorage.setItem('codesnake_best', bestScore);
+			bestVal.textContent = bestScore;
+		}
+
+		overBest.textContent = bestScore;
+
+		if (isNewRecord) {
+			overTitle.textContent = '🏆 NEW RECORD COMPILED! 🚀';
+			overTitle.className = 'text-2xl font-black text-green-500 animate-pulse';
+			overSubtitle.textContent = 'Perfect refactoring! Your code size achieved a new benchmark!';
+		} else {
+			overTitle.textContent = 'BUILD FAILED! 👾';
+			overTitle.className = 'text-2xl font-black text-red-500';
+			overSubtitle.textContent = reason || 'The compiler generated a fault in the compilation segment.';
+		}
+
+		modalGameOver.classList.remove('hidden');
+	}
+
+	// Toast 浮层提示
+	function showToast(text) {
+		if (!toast || !toastText) return;
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 战绩复制
+	function copyScoreAndShare() {
+		const shareText = `Code Snake 🐍\n\nI resolved ${score} compilation bugs and refactored the package without self-looping!\nBest Build: ${bestScore}\n\nPlay free: https://ethelab.com/games`;
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('Score copied to clipboard!');
+		}).catch(() => {
+			showToast('Failed to copy score automatically');
+		});
+	}
+
+	// 社交网络分享绑定
+	const GAME_URL = 'https://ethelab.com/games';
+
+	document.getElementById('share-twitter').addEventListener('click', () => {
+		const msg = `Code Snake 🐍 I compiled ${score} packages! Can you refactor without bugs? Play here:`;
+		window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(GAME_URL)}`, '_blank');
+	});
+
+	document.getElementById('share-linkedin').addEventListener('click', () => {
+		window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(GAME_URL)}`, '_blank');
+	});
+
+	document.getElementById('share-copy-link').addEventListener('click', () => {
+		const defIcon = document.getElementById('icon-link-default');
+		const succIcon = document.getElementById('icon-link-success');
+
+		navigator.clipboard.writeText(GAME_URL).then(() => {
+			defIcon.classList.add('hidden');
+			succIcon.classList.remove('hidden');
+			showToast('Game link copied to clipboard!');
+			setTimeout(() => {
+				defIcon.classList.remove('hidden');
+				succIcon.classList.add('hidden');
+			}, 2000);
+		});
+	});
+
+	// PC 键盘事件绑定
+	window.addEventListener('keydown', (e) => {
+		if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'].includes(e.code)) {
+			e.preventDefault(); // 阻断默认浏览器滚动
+		}
+
+		switch (e.code) {
+			case 'ArrowUp':
+			case 'KeyW':
+				if (direction.y === 0) changeDirection(0, -1);
+				break;
+			case 'ArrowDown':
+			case 'KeyS':
+				if (direction.y === 0) changeDirection(0, 1);
+				break;
+			case 'ArrowLeft':
+			case 'KeyA':
+				if (direction.x === 0) changeDirection(-1, 0);
+				break;
+			case 'ArrowRight':
+			case 'KeyD':
+				if (direction.x === 0) changeDirection(1, 0);
+				break;
+		}
+	});
+
+	// 移动端 D-Pad 事件绑定
+	document.getElementById('dpad-up').addEventListener('touchstart', (e) => {
+		e.preventDefault();
+		if (direction.y === 0) changeDirection(0, -1);
+	}, { passive: false });
+	document.getElementById('dpad-down').addEventListener('touchstart', (e) => {
+		e.preventDefault();
+		if (direction.y === 0) changeDirection(0, 1);
+	}, { passive: false });
+	document.getElementById('dpad-left').addEventListener('touchstart', (e) => {
+		e.preventDefault();
+		if (direction.x === 0) changeDirection(-1, 0);
+	}, { passive: false });
+	document.getElementById('dpad-right').addEventListener('touchstart', (e) => {
+		e.preventDefault();
+		if (direction.x === 0) changeDirection(1, 0);
+	}, { passive: false });
+
+	// 重启控制
+	document.getElementById('btn-trigger-restart').addEventListener('click', resetGame);
+	document.getElementById('btn-play-again').addEventListener('click', resetGame);
+	document.getElementById('btn-share').addEventListener('click', copyScoreAndShare);
+	document.getElementById('btn-help').addEventListener('click', () => modalHelp.classList.remove('hidden'));
+	document.getElementById('close-help').addEventListener('click', () => modalHelp.classList.add('hidden'));
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelp) modalHelp.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 启动游戏状态
+	resetGame();
+	renderLoop();
+
+</body>
+</html>

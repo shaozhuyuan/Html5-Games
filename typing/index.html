@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Typer | Geek Games | HTML5 Game</title>
+  <meta name="description" content="Test your coding speed and programming vocabulary accuracy. Challenge yourself with JavaScript, Python, Docker commands and developer words.">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+	/* CSS 抖动动效 */
+	@keyframes shake {
+		0%, 100% { transform: translateX(0); }
+		25% { transform: translateX(-2px); }
+		75% { transform: translateX(2px); }
+	}
+	.animate-shake {
+		animation: shake 0.15s ease-in-out 2;
+	}
+
+	@keyframes shake-container {
+		0%, 100% { transform: translateX(0); }
+		20%, 60% { transform: translateX(-3px); }
+		40%, 80% { transform: translateX(3px); }
+	}
+	.animate-shake-container {
+		animation: shake-container 0.2s ease-in-out;
+		border-color: rgba(239, 68, 68, 0.45) !important;
+	}
+
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Typer",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Test your coding speed and programming vocabulary accuracy. Challenge yourself with JavaScript, Python, Docker commands and developer words.",
+			"genre": "Typing Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光装饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-3xl px-4 flex flex-col items-center gap-6">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-keyboard text-primary animate-pulse"></i>
+					Code Typer
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex flex-wrap items-center justify-between gap-4 bg-card border rounded-2xl p-4 shadow-sm">
+				<!-- 模式选择 -->
+				<div class="flex items-center gap-2">
+					<span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mode:</span>
+					<div class="flex bg-muted/65 p-1 rounded-xl border border-border/40">
+						<button id="mode-words" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm">
+							Words
+						</button>
+						<button id="mode-code" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							Code Snippets
+						</button>
+					</div>
+				</div>
+
+				<!-- 时间选择 -->
+				<div class="flex items-center gap-2">
+					<span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Time:</span>
+					<div class="flex bg-muted/65 p-1 rounded-xl border border-border/40">
+						<button data-time="15" class="time-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							15s
+						</button>
+						<button data-time="30" class="time-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm">
+							30s
+						</button>
+						<button data-time="60" class="time-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							60s
+						</button>
+					</div>
+				</div>
+
+				<!-- 重来按钮 -->
+				<button
+					id="btn-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Reset
+				</button>
+			</div>
+
+			
+			<div class="w-full grid grid-cols-3 gap-4">
+				<div class="bg-card border rounded-2xl p-4 text-center shadow-sm relative overflow-hidden group">
+					<span class="text-xs uppercase font-bold text-muted-foreground tracking-wider block">Speed (WPM)</span>
+					<span id="wpm-val" class="text-3xl font-black text-primary mt-1 block">0</span>
+					<div class="absolute bottom-0 inset-x-0 h-1 bg-primary/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+				</div>
+				<div class="bg-card border rounded-2xl p-4 text-center shadow-sm relative overflow-hidden group">
+					<span class="text-xs uppercase font-bold text-muted-foreground tracking-wider block">Accuracy</span>
+					<span id="accuracy-val" class="text-3xl font-black text-foreground mt-1 block">100%</span>
+					<div class="absolute bottom-0 inset-x-0 h-1 bg-foreground/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+				</div>
+				<div class="bg-card border rounded-2xl p-4 text-center shadow-sm relative overflow-hidden group">
+					<span class="text-xs uppercase font-bold text-muted-foreground tracking-wider block">Time Left</span>
+					<span id="timer-val" class="text-3xl font-black text-foreground mt-1 block">30s</span>
+					<div class="absolute bottom-0 inset-x-0 h-1 bg-yellow-500/20 scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+				</div>
+			</div>
+
+			
+			<div 
+				id="typing-area-container" 
+				class="relative w-full min-h-[180px] bg-zinc-950/80 border border-border/80 rounded-2xl p-6 shadow-2xl select-none overflow-hidden cursor-text transition-all duration-300"
+			>
+				
+				<div id="focus-overlay" class="absolute inset-0 bg-background/70 backdrop-blur-[1px] flex flex-col items-center justify-center text-center p-6 transition-all duration-300 z-10">
+					<i class="ti ti-pointer text-primary animate-bounce mb-2" style="font-size: 24px;"></i>
+					<h3 class="text-sm font-bold text-foreground">Click here or press any key to focus</h3>
+					<p class="text-xs text-muted-foreground mt-1">Start typing to begin the countdown timer</p>
+				</div>
+
+				<!-- 隐藏输入框 -->
+				<input 
+					type="text" 
+					id="hidden-input" 
+					class="absolute top-0 left-0 w-1 h-1 opacity-0 pointer-events-none" 
+					autocomplete="off" 
+					autocapitalize="off" 
+					spellcheck="false" 
+				/>
+
+				<!-- 文本展示层 -->
+				<div id="words-wrapper" class="relative text-lg sm:text-xl font-mono leading-relaxed tracking-wider text-muted-foreground select-none break-all whitespace-pre-wrap transition-all duration-200">
+					<!-- 动态生成字符 -->
+				</div>
+			</div>
+
+			
+			<div class="text-xs text-muted-foreground/80 flex items-center gap-1.5">
+				<i class="ti ti-info-circle text-primary" style="font-size: 14px;"></i>
+				<span>Press <kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono text-[10px]">Esc</kbd> or click <strong>Reset</strong> to restart the game at any time.</span>
+			</div>
+
+			
+			<div class="w-full grid gap-4 sm:grid-cols-2 mt-4 text-xs text-muted-foreground leading-relaxed">
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-help text-primary" style="font-size: 16px;"></i>
+						How to Play
+					</h3>
+					<ul class="list-disc pl-4 space-y-1.5">
+						<li>Click the typing area or press any key to focus.</li>
+						<li>Type the highlighted characters exactly as shown.</li>
+						<li><span class="text-green-500 font-semibold">Green characters</span> represent correct keypresses.</li>
+						<li><span class="text-red-500 font-semibold">Red characters</span> indicate typos. Use backspace to correct.</li>
+						<li>The timer starts automatically with your first keypress.</li>
+					</ul>
+				</div>
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-brand-typescript text-primary" style="font-size: 16px;"></i>
+						About Code Typer
+					</h3>
+					<p>
+						<strong>Code Typer</strong> is a web-based typing speed application tailored for developers. It offers interactive sessions featuring real JavaScript, Python, HTML code, as well as core programming vocabulary to build developer muscle memory.
+					</p>
+					<p>
+						Monitor your Net WPM (Words Per Minute), track keyboard accuracy percentages, and share your final scores with fellow developers to see who boasts the fastest keystroke logic!
+					</p>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-help-detail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-md bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">Keyboard Shortkeys</h3>
+					<button id="close-help-detail" class="text-muted-foreground hover:text-foreground cursor-pointer">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-4 leading-relaxed">
+					<p>Quick keys to optimize your typing gameflow:</p>
+					<ul class="list-disc pl-5 space-y-2">
+						<li><kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">Esc</kbd> — Reset the game immediately.</li>
+						<li><kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">Tab</kbd> + <kbd class="px-1.5 py-0.5 rounded bg-muted border font-mono">Enter</kbd> — Restart a new session.</li>
+						<li>Clicking outside the game area pauses active input, while clicking back immediately triggers focus.</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-md bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-primary animate-pulse">COMPILATION SUCCESSFUL! 🚀</h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2">You compiled the code within the time limit.</p>
+				
+				<div class="grid grid-cols-2 gap-4 my-6">
+					<div class="p-3 rounded-xl bg-muted/40 border border-border/60">
+						<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Typing Speed</span>
+						<span id="gameover-wpm" class="text-3xl font-black text-primary">0 WPM</span>
+					</div>
+					<div class="p-3 rounded-xl bg-muted/40 border border-border/60">
+						<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Accuracy</span>
+						<span id="gameover-accuracy" class="text-3xl font-black text-foreground">0%</span>
+					</div>
+				</div>
+
+				<div class="p-4 rounded-xl bg-zinc-950 border border-border/50 text-left font-mono text-xs mb-6 text-muted-foreground relative overflow-hidden group">
+					<div class="absolute top-2 right-2 flex gap-1.5">
+						<span class="size-2.5 rounded-full bg-red-500/80"></span>
+						<span class="size-2.5 rounded-full bg-yellow-500/80"></span>
+						<span class="size-2.5 rounded-full bg-green-500/80"></span>
+					</div>
+					<span class="text-[10px] text-primary/75 block mb-2 border-b border-border/30 pb-1">// Build Performance Report</span>
+					<div class="space-y-1">
+						<div>Time Mode: <span id="report-time" class="text-foreground">30s</span></div>
+						<div>Game Mode: <span id="report-mode" class="text-foreground">Words</span></div>
+						<div>Raw Keystrokes: <span id="report-keys" class="text-foreground">0</span></div>
+						<div>Correct Keys: <span id="report-correct" class="text-green-500">0</span></div>
+						<div>Incorrect Keys: <span id="report-errors" class="text-red-500">0</span></div>
+					</div>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95 cursor-pointer"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Report & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+					>
+						Recompile (Play Again)
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Toast 浮层提示 -->
+		<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+			<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+			<span id="toast-text">Copied to clipboard!</span>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Typer",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Test your coding speed and programming vocabulary accuracy. Challenge yourself with JavaScript, Python, Docker commands and developer words.",
+			"genre": "Typing Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 单词及代码词库配置
+	const DEV_WORDS = [
+		'asynchronous', 'callback', 'closure', 'recursion', 'polymorphism', 'inheritance', 'encapsulation',
+		'framework', 'compiler', 'interpreter', 'repository', 'deployment', 'database', 'middleware',
+		'authentication', 'authorization', 'concurrency', 'deadlock', 'serialize', 'deserialize',
+		'dependency', 'injection', 'singleton', 'factory', 'observer', 'decorator', 'prototype',
+		'constructor', 'destructuring', 'promise', 'observable', 'algorithm', 'complexity', 'pipeline',
+		'microservices', 'container', 'orchestration', 'loadbalancer', 'kubernetes', 'dockerfile',
+		'graphql', 'restful', 'webassembly', 'refactoring', 'validation', 'exception', 'stacktrace'
+	];
+
+	const DEV_CODES = [
+		'const format = (date) => date.toISOString();',
+		'function debounce(fn, delay) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); }; }',
+		'import { useState, useEffect } from \'react\';',
+		'const active = items.filter(item => item.isActive);',
+		'const res = await fetch(\'/api/v1/users\');',
+		'const sum = array.reduce((acc, curr) => acc + curr, 0);',
+		'export default async function Page({ params }) { const data = await getData(params.id); }',
+		'git commit -m "feat: implement typing speed game"',
+		'docker run -d -p 80:80 --name web-server nginx',
+		'npm install -D typescript vitest tailwindcss',
+		'const keys = Object.keys(config).map(k => k.toLowerCase());',
+		'const unique = [...new Set(array)];',
+		'fs.writeFileSync(path.join(__dirname, \'output.json\'), JSON.stringify(data));',
+		'const delay = ms => new Promise(res => setTimeout(res, ms));'
+	];
+
+	// 状态变量
+	let activeMode = 'words'; // 'words' | 'code'
+	let activeTime = 30; // 15 | 30 | 60
+	let timeLeft = activeTime;
+	let timer = null;
+	let isPlaying = false;
+	let hasStarted = false;
+
+	let textToType = '';
+	let typedCharactersCount = 0;
+	let correctCharactersCount = 0;
+	let errorCharactersCount = 0;
+	let currentIndex = 0;
+
+	// DOM 元素引用
+	const wordsWrapper = document.getElementById('words-wrapper');
+	const hiddenInput = document.getElementById('hidden-input');
+	const typingAreaContainer = document.getElementById('typing-area-container');
+	const focusOverlay = document.getElementById('focus-overlay');
+	
+	const wpmVal = document.getElementById('wpm-val');
+	const accuracyVal = document.getElementById('accuracy-val');
+	const timerVal = document.getElementById('timer-val');
+
+	const btnRestart = document.getElementById('btn-restart');
+	const btnHelp = document.getElementById('btn-help');
+	const btnPlayAgain = document.getElementById('btn-play-again');
+	const btnShare = document.getElementById('btn-share');
+	
+	const modalHelpDetail = document.getElementById('modal-help-detail');
+	const closeModalHelpDetail = document.getElementById('close-help-detail');
+	const modalGameOver = document.getElementById('modal-gameover');
+	
+	const toast = document.getElementById('toast-message');
+	const toastText = document.getElementById('toast-text');
+
+	// 模式与时间切换按钮
+	const modeWordsBtn = document.getElementById('mode-words');
+	const modeCodeBtn = document.getElementById('mode-code');
+	const timeBtns = document.querySelectorAll('.time-btn');
+
+	// 模式按钮切换逻辑
+	function setMode(mode) {
+		activeMode = mode;
+		if (mode === 'words') {
+			modeWordsBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm';
+			modeCodeBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground';
+		} else {
+			modeCodeBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm';
+			modeWordsBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground';
+		}
+		resetGame();
+	}
+
+	modeWordsBtn.addEventListener('click', () => setMode('words'));
+	modeCodeBtn.addEventListener('click', () => setMode('code'));
+
+	// 时间按钮切换逻辑
+	timeBtns.forEach(btn => {
+		btn.addEventListener('click', () => {
+			timeBtns.forEach(b => {
+				b.className = 'time-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground';
+			});
+			btn.className = 'time-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm';
+			activeTime = parseInt(btn.getAttribute('data-time'), 10);
+			resetGame();
+		});
+	});
+
+	// 生成要输入的文本内容
+	function generateText() {
+		if (activeMode === 'words') {
+			// 从 DEV_WORDS 中随机抽取 30 个单词，组成一句长字符串，空格相连
+			const shuffled = [...DEV_WORDS].sort(() => 0.5 - Math.random());
+			textToType = shuffled.slice(0, 35).join(' ');
+		} else {
+			// 从 DEV_CODES 中随机抽取 4 条代码段，换行或空格连接
+			const shuffled = [...DEV_CODES].sort(() => 0.5 - Math.random());
+			textToType = shuffled.slice(0, 3).join('   ');
+		}
+
+		// 清理 DOM 并填充字符 span
+		wordsWrapper.innerHTML = '';
+		for (let i = 0; i < textToType.length; i++) {
+			const charSpan = document.createElement('span');
+			charSpan.textContent = textToType[i];
+			charSpan.className = 'transition-colors duration-150 relative inline';
+			if (i === 0) {
+				// 光标元素
+				charSpan.classList.add('border-l-2', 'border-primary', 'animate-pulse');
+			}
+			wordsWrapper.appendChild(charSpan);
+		}
+	}
+
+	// 键盘聚焦与遮罩层逻辑
+	function triggerFocus() {
+		hiddenInput.focus();
+		focusOverlay.classList.add('opacity-0', 'pointer-events-none');
+		typingAreaContainer.classList.add('border-primary/60', 'ring-1', 'ring-primary/20');
+	}
+
+	function triggerBlur() {
+		focusOverlay.classList.remove('opacity-0', 'pointer-events-none');
+		typingAreaContainer.classList.remove('border-primary/60', 'ring-1', 'ring-primary/20');
+	}
+
+	typingAreaContainer.addEventListener('click', triggerFocus);
+	hiddenInput.addEventListener('focus', triggerFocus);
+	hiddenInput.addEventListener('blur', triggerBlur);
+
+	// 重新开始游戏
+	function resetGame() {
+		clearInterval(timer);
+		timer = null;
+		timeLeft = activeTime;
+		isPlaying = false;
+		hasStarted = false;
+		
+		typedCharactersCount = 0;
+		correctCharactersCount = 0;
+		errorCharactersCount = 0;
+		currentIndex = 0;
+
+		wpmVal.textContent = '0';
+		accuracyVal.textContent = '100%';
+		timerVal.textContent = timeLeft + 's';
+		hiddenInput.value = '';
+
+		generateText();
+		focusOverlay.classList.remove('opacity-0', 'pointer-events-none');
+		modalGameOver.classList.add('hidden');
+	}
+
+	// 开始计时器
+	function startTimer() {
+		isPlaying = true;
+		timer = setInterval(() => {
+			timeLeft--;
+			timerVal.textContent = timeLeft + 's';
+
+			// 动态计算 WPM 和 准确度
+			updateMetrics();
+
+			if (timeLeft <= 0) {
+				endGame();
+			}
+		}, 1000);
+	}
+
+	// 核心数值计算
+	function updateMetrics() {
+		const elapsedMinutes = (activeTime - timeLeft) / 60;
+		if (elapsedMinutes > 0) {
+			// WPM 计算公式 = (正确敲击键数 / 5) / 分钟
+			// 使用 Net WPM 公式，扣减错误（或者只用正确的字符，为了体验这里用 net wpm 并且不为负数）
+			const calculatedWpm = Math.round((correctCharactersCount / 5) / elapsedMinutes);
+			wpmVal.textContent = Math.max(0, calculatedWpm);
+		}
+		
+		// 准确率 = (正确键数 / 总输入键数) * 100
+		const totalAttempts = correctCharactersCount + errorCharactersCount;
+		if (totalAttempts > 0) {
+			const accuracy = Math.round((correctCharactersCount / totalAttempts) * 100);
+			accuracyVal.textContent = accuracy + '%';
+		} else {
+			accuracyVal.textContent = '100%';
+		}
+	}
+
+	// 处理输入逻辑
+	hiddenInput.addEventListener('input', (e) => {
+		if (!hasStarted) {
+			hasStarted = true;
+			startTimer();
+		}
+
+		const inputValue = e.target.value;
+		const spans = wordsWrapper.querySelectorAll('span');
+
+		// 检查是输入了字符，还是按了 Backspace 退格
+		if (inputValue.length < currentIndex) {
+			// 退格操作
+			// 清理当前和之前超出范围的样式
+			for (let i = inputValue.length; i <= currentIndex; i++) {
+				if (spans[i]) {
+					spans[i].className = 'transition-colors duration-150 relative inline';
+				}
+			}
+			currentIndex = inputValue.length;
+		} else {
+			// 新输入字符
+			const typedChar = inputValue[currentIndex];
+			const targetChar = textToType[currentIndex];
+
+			if (spans[currentIndex]) {
+				if (typedChar === targetChar) {
+					// 输入正确
+					spans[currentIndex].className = 'text-green-500 font-semibold relative inline transition-colors duration-150';
+					correctCharactersCount++;
+				} else {
+					// 输入错误
+					spans[currentIndex].className = 'text-red-500 font-bold border-b-2 border-red-500 relative inline animate-shake transition-colors duration-150';
+					errorCharactersCount++;
+					
+					// 输入错误时添加抖动效果
+					typingAreaContainer.classList.add('animate-shake-container');
+					setTimeout(() => {
+						typingAreaContainer.classList.remove('animate-shake-container');
+					}, 200);
+				}
+				currentIndex++;
+			}
+		}
+
+		// 移动光标
+		spans.forEach((span, idx) => {
+			span.classList.remove('border-l-2', 'border-primary', 'animate-pulse');
+			if (idx === currentIndex) {
+				span.classList.add('border-l-2', 'border-primary', 'animate-pulse');
+			}
+		});
+
+		// 更新瞬时数值
+		updateMetrics();
+
+		// 如果输入完所有文本，则提前结束
+		if (currentIndex >= textToType.length) {
+			endGame();
+		}
+	});
+
+	// 结束游戏
+	function endGame() {
+		clearInterval(timer);
+		isPlaying = false;
+		hiddenInput.blur();
+
+		const finalTimeUsed = activeTime - timeLeft;
+		const elapsedMinutes = Math.max(1, finalTimeUsed) / 60;
+		const finalWpm = Math.round((correctCharactersCount / 5) / elapsedMinutes);
+		
+		const totalAttempts = correctCharactersCount + errorCharactersCount;
+		const finalAccuracy = totalAttempts > 0 ? Math.round((correctCharactersCount / totalAttempts) * 100) : 100;
+
+		// 填充结算弹窗
+		document.getElementById('gameover-wpm').textContent = finalWpm + ' WPM';
+		document.getElementById('gameover-accuracy').textContent = finalAccuracy + '%';
+		
+		// 填充绩效报告
+		document.getElementById('report-time').textContent = activeTime + 's (' + finalTimeUsed + 's used)';
+		document.getElementById('report-mode').textContent = activeMode === 'words' ? 'Developer Words' : 'Code Snippets';
+		document.getElementById('report-keys').textContent = totalAttempts;
+		document.getElementById('report-correct').textContent = correctCharactersCount;
+		document.getElementById('report-errors').textContent = errorCharactersCount;
+
+		// 修改评价标题
+		const titleEl = document.getElementById('gameover-title');
+		const subtitleEl = document.getElementById('gameover-subtitle');
+		if (finalWpm >= 80 && finalAccuracy >= 95) {
+			titleEl.textContent = 'SENIOR ARCHITECT! 🏆';
+			titleEl.className = 'text-2xl font-black text-green-500 animate-pulse';
+			subtitleEl.textContent = 'Stunning typing speed! Ready to compile critical systems in seconds.';
+		} else if (finalWpm >= 50 && finalAccuracy >= 90) {
+			titleEl.textContent = 'SENIOR CODER! 🚀';
+			titleEl.className = 'text-2xl font-black text-primary';
+			subtitleEl.textContent = 'Excellent keyboard flow. A very stable and solid speed benchmark.';
+		} else if (finalWpm >= 30) {
+			titleEl.textContent = 'JUNIOR DEVELOPER ⌨️';
+			titleEl.className = 'text-2xl font-black text-yellow-500';
+			subtitleEl.textContent = 'Not bad, but compiler warnings generated. Keep practicing to speed up!';
+		} else {
+			titleEl.textContent = 'CODE INTERN 👾';
+			titleEl.className = 'text-2xl font-black text-red-500';
+			subtitleEl.textContent = 'Stack overflow warning! Fingers are lagging behind compiler logic.';
+		}
+
+		modalGameOver.classList.remove('hidden');
+	}
+
+	// 键盘快捷键监听
+	window.addEventListener('keydown', (e) => {
+		// ESC 键重置游戏
+		if (e.key === 'Escape') {
+			resetGame();
+		}
+		
+		// 除了快捷键外的字符输入自动聚焦
+		if (!isPlaying && !modalGameOver.classList.contains('hidden')) return; // 结算弹窗时不自动聚焦
+		
+		// 过滤修饰键等
+		if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement !== hiddenInput) {
+			triggerFocus();
+		}
+	});
+
+	// Toast 浮层显示
+	function showToast(text) {
+		if (!toast || !toastText) return;
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 分享数据拷贝
+	function copyScoreAndShare() {
+		const wpmText = document.getElementById('gameover-wpm').textContent;
+		const accText = document.getElementById('gameover-accuracy').textContent;
+		const modeText = activeMode === 'words' ? 'Words' : 'Code';
+		const timeText = activeTime + 's';
+		
+		const shareText = `⌨️ Code Typer Benchmark on EtheLab 🚀\n\nSpeed: ${wpmText}\nAccuracy: ${accText}\nMode: ${modeText} (${timeText})\n\nChallenge your dev typing fingers: https://ethelab.com/games/typing`;
+		
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('Score report copied to clipboard!');
+		}).catch(() => {
+			showToast('Failed to copy. Please manually copy URL.');
+		});
+	}
+
+	// 监听按钮事件
+	btnRestart.addEventListener('click', resetGame);
+	btnPlayAgain.addEventListener('click', resetGame);
+	btnShare.addEventListener('click', copyScoreAndShare);
+	
+	btnHelp.addEventListener('click', () => modalHelpDetail.classList.remove('hidden'));
+	closeModalHelpDetail.addEventListener('click', () => modalHelpDetail.classList.add('hidden'));
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelpDetail) modalHelpDetail.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 页面初始化
+	resetGame();
+
+</body>
+</html>

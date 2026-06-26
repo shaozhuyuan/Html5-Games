@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programmer 2048 | HTML5 Game</title>
+  <meta name="description" content="Can you reach the C-suite? Merge developer titles from Intern to CTO and CEO in this geeky 2048 brain teaser.">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+	/* 方块合并弹跳动画 */
+	.tile-merged {
+		animation: pop-merge 0.2s ease-in-out;
+	}
+	@keyframes pop-merge {
+		0% { transform: scale(0.8); }
+		50% { transform: scale(1.15); }
+		100% { transform: scale(1); }
+	}
+	/* 新生方块动画 */
+	.tile-new {
+		animation: pop-new 0.15s ease-in-out;
+	}
+	@keyframes pop-new {
+		0% { transform: scale(0); opacity: 0; }
+		100% { transform: scale(1); opacity: 1; }
+	}
+
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Programmer 2048",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Can you reach the C-suite? Merge developer titles from Intern to CTO and CEO in this geeky 2048 brain teaser.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光修饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-xl px-4 flex flex-col items-center gap-5">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-binary text-primary"></i>
+					Programmer 2048
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-4 mt-2">
+				<div class="flex gap-2">
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[70px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Score</span>
+						<span id="score-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+					<div class="bg-card border rounded-xl px-3 py-2 text-center min-w-[70px] shadow-sm">
+						<span class="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">Best</span>
+						<span id="best-val" class="text-lg font-black text-foreground">0</span>
+					</div>
+				</div>
+
+				<button
+					id="btn-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Restart
+				</button>
+			</div>
+
+			
+			<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+				<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+				<span id="toast-text">Copied to clipboard!</span>
+			</div>
+
+			<!-- 游戏面板 (4x4网格) -->
+			<div class="relative w-full aspect-square max-w-[480px] bg-muted/60 border border-border/60 rounded-2xl p-4 shadow-inner select-none overflow-hidden touch-none" id="game-board-container">
+				<!-- 背景 16 格槽 -->
+				<div class="grid grid-cols-4 grid-rows-4 gap-2.5 h-full w-full">
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+					<div class="bg-muted/45 border border-border/30 rounded-xl w-full h-full"></div>
+				</div>
+				
+				<!-- 动态方块层 -->
+				<div class="absolute inset-4" id="tile-container">
+					<!-- JS 动态生成的方块将填充在此 -->
+				</div>
+			</div>
+
+			
+			<div class="w-full bg-card/45 border rounded-2xl p-4 mt-2 text-center max-w-[480px] shadow-sm">
+				<span class="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">Career Promotion Ladder</span>
+				<div class="flex items-center justify-center flex-wrap gap-1.5 text-xs text-muted-foreground">
+					<span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-foreground text-[10px]">Intern (2)</span>
+					<i class="ti ti-chevron-right " style="font-size: 12px;"></i>
+					<span class="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-foreground text-[10px]">Junior (4)</span>
+					<i class="ti ti-chevron-right " style="font-size: 12px;"></i>
+					<span class="px-1.5 py-0.5 rounded bg-blue-500 text-white text-[10px]">Senior (8)</span>
+					<i class="ti ti-chevron-right " style="font-size: 12px;"></i>
+					<span class="px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[10px]">CTO (512)</span>
+					<i class="ti ti-chevron-right " style="font-size: 12px;"></i>
+					<span class="px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-600 to-rose-500 text-white font-bold text-[10px]">CEO (2048)</span>
+				</div>
+			</div>
+
+			
+			<div class="w-full flex items-center justify-between gap-3 p-3 rounded-2xl bg-card border shadow-sm max-w-[480px] mt-2">
+				<span class="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 ml-1">
+					<i class="ti ti-share-2 text-primary size-4"></i>
+					Invite friends to play:
+				</span>
+				<div class="flex gap-2">
+					<button
+						id="share-twitter"
+						title="Share on X (Twitter)"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-x " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-linkedin"
+						title="Share on LinkedIn"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+					>
+						<i class="ti ti-brand-linkedin " style="font-size: 16px;"></i>
+					</button>
+					<button
+						id="share-copy-link"
+						title="Copy Game Link"
+						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer relative"
+					>
+						<i class="ti ti-link " style="font-size: 16px;"></i>
+						<i class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
+					</button>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-help" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-md bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">How To Play</h3>
+					<button id="close-help" class="text-muted-foreground hover:text-foreground">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-4 leading-relaxed">
+					<p>Merge developer ranks using your <strong class="text-foreground">keyboard arrow keys</strong> or by <strong class="text-foreground">swiping</strong> on mobile screens.</p>
+					<ul class="list-disc pl-5 space-y-2">
+						<li>When two tiles with the same tech rank touch, they merge into one with the next rank!</li>
+						<li>Can you merge all the way to unlock the ultimate <strong class="text-foreground">CEO (2048)</strong> role?</li>
+					</ul>
+					<div class="border-t pt-4">
+						<h4 class="font-semibold text-foreground mb-3 font-mono">Title Values</h4>
+						<div class="grid grid-cols-2 gap-2 text-xs">
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-zinc-200 dark:bg-zinc-800 text-foreground flex items-center justify-center font-bold">2</span>
+								<span>Intern</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-blue-100 dark:bg-blue-900/50 text-foreground flex items-center justify-center font-bold">4</span>
+								<span>Junior Dev</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-blue-500 text-white flex items-center justify-center font-bold">8</span>
+								<span>Senior Dev</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-indigo-600 text-white flex items-center justify-center font-bold">16</span>
+								<span>Tech Lead</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-purple-600 text-white flex items-center justify-center font-bold">32</span>
+								<span>Product Manager</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-pink-600 text-white flex items-center justify-center font-bold">64</span>
+								<span>Architect</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-orange-500 text-white flex items-center justify-center font-bold">128</span>
+								<span>Director</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center font-bold">256</span>
+								<span>VP</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center font-bold">512</span>
+								<span>CTO</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-yellow-400 text-zinc-950 flex items-center justify-center font-bold">1024</span>
+								<span>Founder</span>
+							</div>
+							<div class="flex items-center gap-1.5">
+								<span class="w-7 h-7 rounded bg-gradient-to-r from-violet-600 to-rose-500 text-white flex items-center justify-center font-bold text-[8px]">2048</span>
+								<span class="font-bold text-primary">CEO</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-foreground"></h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2"></p>
+				
+				<div class="my-6 p-4 rounded-xl bg-muted/40 border border-border/60">
+					<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Your Max Rank Achieved</span>
+					<span id="gameover-rank" class="text-xl font-bold tracking-wide text-primary uppercase"></span>
+					<span id="gameover-score-container" class="block text-xs text-muted-foreground mt-2">
+						Final Score: <strong id="gameover-score" class="text-foreground"></strong>
+					</span>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Score & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+					>
+						Play Again
+					</button>
+				</div>
+			</div>
+			<!-- 可索引的 SEO 说明 (解决 Canvas 薄内容缺陷) -->
+			<div class="w-full max-w-xl mt-6 p-5 rounded-2xl bg-card/65 border border-border/40 text-xs text-muted-foreground leading-relaxed space-y-3">
+				<h2 class="font-bold text-foreground text-sm">About Programmer 2048</h2>
+				<p>
+					<strong>Programmer 2048</strong> is a lightweight, developer-themed online puzzle game inspired by the classic 2048 grid. Instead of merging numbers, players combine career ranks starting from Intern, to Junior Developer, Senior, Architect, and all the way up to CEO.
+				</p>
+				<p>
+					This game is 100% free to play, requires no installation, and runs entirely in your web browser. Challenge your logical brain, merge tiles in binary powers, and test if you have what it takes to patch your way into the executive suite!
+				</p>
+			</div>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Programmer 2048",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
+			"description": "Can you reach the C-suite? Merge developer titles from Intern to CTO and CEO in this geeky 2048 brain teaser.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 职业等级配置
+	const TITLE_MAP = {
+		2: { name: 'Intern', class: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200' },
+		4: { name: 'Junior', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200' },
+		8: { name: 'Senior', class: 'bg-blue-500 text-white shadow-sm' },
+		16: { name: 'Lead', class: 'bg-indigo-600 text-white shadow-sm' },
+		32: { name: 'PM', class: 'bg-purple-600 text-white shadow-sm' },
+		64: { name: 'Architect', class: 'bg-pink-600 text-white shadow-sm' },
+		128: { name: 'Director', class: 'bg-orange-500 text-white shadow-sm' },
+		256: { name: 'VP', class: 'bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.35)]' },
+		512: { name: 'CTO', class: 'bg-amber-500 text-white font-extrabold shadow-[0_0_18px_rgba(245,158,11,0.5)] animate-pulse' },
+		1024: { name: 'Founder', class: 'bg-yellow-400 text-zinc-950 font-black shadow-[0_0_22px_rgba(234,179,8,0.65)]' },
+		2048: { name: 'CEO', class: 'bg-gradient-to-r from-violet-600 via-rose-500 to-amber-500 text-white font-black shadow-[0_0_30px_rgba(244,63,94,0.75)] border border-white/10' }
+	};
+
+	const BOARD_SIZE = 4;
+	let board = [];
+	let score = 0;
+	let bestScore = parseInt(localStorage.getItem('programmer2048_best') || '0', 10);
+	let isGameOver = false;
+	let isWon = false;
+	let hasWonNotified = false; // 是否已经弹窗通知过通关 2048，以便玩家继续无尽模式
+
+	const boardContainer = document.getElementById('game-board-container');
+	const tileContainer = document.getElementById('tile-container');
+	const scoreVal = document.getElementById('score-val');
+	const bestVal = document.getElementById('best-val');
+	const modalHelp = document.getElementById('modal-help');
+	const modalGameOver = document.getElementById('modal-gameover');
+
+	// 初始化/开始新游戏
+	function startGame() {
+		board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+		score = 0;
+		isGameOver = false;
+		isWon = false;
+		hasWonNotified = false;
+		
+		scoreVal.textContent = '0';
+		bestVal.textContent = bestScore;
+		
+		modalGameOver.classList.add('hidden');
+		
+		addRandomTile();
+		addRandomTile();
+		renderBoard();
+	}
+
+	// 随机在一个空闲格生成 2 或 4
+	function addRandomTile() {
+		const emptyCells = [];
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				if (board[r][c] === 0) {
+					emptyCells.push({ r, c });
+				}
+			}
+		}
+		
+		if (emptyCells.length > 0) {
+			const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+			board[r][c] = Math.random() < 0.9 ? 2 : 4;
+			return { r, c, val: board[r][c] };
+		}
+		return null;
+	}
+
+	// 绘制整个面板方块
+	function renderBoard() {
+		tileContainer.innerHTML = '';
+		
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				const val = board[r][c];
+				if (val > 0) {
+					const tile = document.createElement('div');
+					const config = TITLE_MAP[val] || { name: `L-${val}`, class: 'bg-zinc-950 text-white font-extrabold shadow-lg border border-primary/20 animate-pulse' };
+					
+					// 动态位置布局 (利用百分比和绝对定位)
+					tile.style.top = `${r * 25}%`;
+					tile.style.left = `${c * 25}%`;
+					tile.style.width = '24%';
+					tile.style.height = '24%';
+					
+					// 动态缩放职位名字字号以防溢出
+					let fontSizeClass = 'text-[10px] sm:text-[12px]';
+					if (config.name.length > 8) {
+						fontSizeClass = 'text-[8px] sm:text-[9px]';
+					} else if (config.name.length > 6) {
+						fontSizeClass = 'text-[9px] sm:text-[10px]';
+					}
+
+					tile.className = `absolute rounded-xl flex flex-col items-center justify-center p-1.5 transition-all duration-150 select-none shadow-sm ${config.class} tile-new`;
+					
+					tile.innerHTML = `
+						<span class="text-xl sm:text-3xl font-black leading-none font-mono tracking-tight">${val}</span>
+						<span class="${fontSizeClass} opacity-85 mt-1 sm:mt-1.5 font-bold uppercase text-center tracking-wider">${config.name}</span>
+					`;
+					
+					tileContainer.appendChild(tile);
+				}
+			}
+		}
+		
+		scoreVal.textContent = score;
+		if (score > bestScore) {
+			bestScore = score;
+			localStorage.setItem('programmer2048_best', bestScore);
+			bestVal.textContent = bestScore;
+		}
+	}
+
+	// 核心移动逻辑：向左
+	function slideLeft() {
+		let moved = false;
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			const row = board[r].filter(val => val !== 0);
+			const newRow = [];
+			
+			for (let i = 0; i < row.length; i++) {
+				if (i + 1 < row.length && row[i] === row[i + 1]) {
+					const mergedVal = row[i] * 2;
+					newRow.push(mergedVal);
+					score += mergedVal;
+					i++;
+					moved = true;
+					if (mergedVal === 2048) isWon = true;
+				} else {
+					newRow.push(row[i]);
+				}
+			}
+			
+			while (newRow.length < BOARD_SIZE) {
+				newRow.push(0);
+			}
+			
+			if (newRow.join(',') !== board[r].join(',')) {
+				moved = true;
+			}
+			board[r] = newRow;
+		}
+		return moved;
+	}
+
+	// 旋转盘面以支持所有方向 (逆时针旋转 90 度)
+	function rotateLeft() {
+		const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0));
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				newBoard[BOARD_SIZE - 1 - c][r] = board[r][c];
+			}
+		}
+		board = newBoard;
+	}
+
+	// 各方向操作
+	function move(direction) {
+		if (isGameOver) return;
+		
+		let moved = false;
+		
+		// 统一把所有方向旋转成向左移动，移动完再旋转回原位
+		if (direction === 'left') {
+			moved = slideLeft();
+		} else if (direction === 'right') {
+			rotateLeft();
+			rotateLeft();
+			moved = slideLeft();
+			rotateLeft();
+			rotateLeft();
+		} else if (direction === 'up') {
+			rotateLeft();
+			moved = slideLeft();
+			rotateLeft();
+			rotateLeft();
+			rotateLeft();
+		} else if (direction === 'down') {
+			rotateLeft();
+			rotateLeft();
+			rotateLeft();
+			moved = slideLeft();
+			rotateLeft();
+		}
+		
+		if (moved) {
+			addRandomTile();
+			renderBoard();
+			checkGameStatus();
+		}
+	}
+
+	// 判定游戏胜负状态
+	function checkGameStatus() {
+		// 1. 胜利判定 (合出 2048)
+		if (isWon && !hasWonNotified) {
+			gameOver(true);
+			hasWonNotified = true;
+			return;
+		}
+		
+		// 2. 检查是否有空闲格
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				if (board[r][c] === 0) return; // 依然有空闲
+			}
+		}
+		
+		// 3. 检查是否有可合并的邻居
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				const current = board[r][c];
+				if (r + 1 < BOARD_SIZE && current === board[r + 1][c]) return;
+				if (c + 1 < BOARD_SIZE && current === board[r][c + 1]) return;
+			}
+		}
+		
+		// 走到这里说明没有任何空闲格且无法合并，游戏结束
+		gameOver(false);
+	}
+
+	// 获取当前棋盘上最大的职级 Title
+	function getMaxTitle() {
+		let maxVal = 0;
+		for (let r = 0; r < BOARD_SIZE; r++) {
+			for (let c = 0; c < BOARD_SIZE; c++) {
+				if (board[r][c] > maxVal) {
+					maxVal = board[r][c];
+				}
+			}
+		}
+		const config = TITLE_MAP[maxVal] || { name: `L-${maxVal}` };
+		return `${config.name} (${maxVal})`;
+	}
+
+	// 弹窗处理
+	function gameOver(isWin) {
+		const title = document.getElementById('gameover-title');
+		const subtitle = document.getElementById('gameover-subtitle');
+		const rankSpan = document.getElementById('gameover-rank');
+		const scoreSpan = document.getElementById('gameover-score');
+		
+		if (isWin) {
+			title.textContent = 'Congratulations! 🎓';
+			subtitle.textContent = 'You successfully made it to the executive C-suite!';
+			rankSpan.textContent = 'CEO (2048)';
+		} else {
+			title.textContent = 'Bankruptcy! 👾';
+			subtitle.textContent = 'No moves left. The tech bubble burst!';
+			rankSpan.textContent = getMaxTitle();
+		}
+		
+		scoreSpan.textContent = score;
+		modalGameOver.classList.remove('hidden');
+	}
+
+	// 弹出 Toast 提示
+	function showToast(text) {
+		const toast = document.getElementById('toast-message');
+		const toastText = document.getElementById('toast-text');
+		if (!toast || !toastText) return;
+		
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 复制战绩分享
+	function copyScoreAndShare() {
+		const maxTitle = getMaxTitle();
+		const shareText = `EtheLab Programmer 2048 💻\n\nMax Career Rank: ${maxTitle}\nFinal Score: ${score}\n\nPlay online free: https://ethelab.com/games`;
+		
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('Score copied to clipboard!');
+		}).catch(() => {
+			showToast('Failed to copy score automatically');
+		});
+	}
+
+	// 物理键盘监听
+	document.addEventListener('keydown', (e) => {
+		if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyS', 'KeyA', 'KeyD'].includes(e.code)) {
+			e.preventDefault(); // 阻止浏览器滚动条滚动
+		}
+		
+		switch (e.code) {
+			case 'ArrowLeft':
+			case 'KeyA':
+				move('left');
+				break;
+			case 'ArrowRight':
+			case 'KeyD':
+				move('right');
+				break;
+			case 'ArrowUp':
+			case 'KeyW':
+				move('up');
+				break;
+			case 'ArrowDown':
+			case 'KeyS':
+				move('down');
+				break;
+		}
+	});
+
+	// 手机移动端滑动手势监听
+	let touchStartX = 0;
+	let touchStartY = 0;
+
+	boardContainer.addEventListener('touchstart', (e) => {
+		touchStartX = e.touches[0].clientX;
+		touchStartY = e.touches[0].clientY;
+	}, { passive: true });
+
+	boardContainer.addEventListener('touchend', (e) => {
+		if (e.touches.length > 0) return;
+		
+		const touchEndX = e.changedTouches[0].clientX;
+		const touchEndY = e.changedTouches[0].clientY;
+		
+		const dx = touchEndX - touchStartX;
+		const dy = touchEndY - touchStartY;
+		const absDx = Math.abs(dx);
+		const absDy = Math.abs(dy);
+		
+		// 设定触发滑动的阈值 (50 像素)
+		if (Math.max(absDx, absDy) > 50) {
+			if (absDx > absDy) {
+				// 水平滑动
+				move(dx > 0 ? 'right' : 'left');
+			} else {
+				// 垂直滑动
+				move(dy > 0 ? 'down' : 'up');
+			}
+		}
+	}, { passive: true });
+
+	// 模态弹窗控制
+	document.getElementById('btn-help').addEventListener('click', () => modalHelp.classList.remove('hidden'));
+	document.getElementById('close-help').addEventListener('click', () => modalHelp.classList.add('hidden'));
+	document.getElementById('btn-restart').addEventListener('click', startGame);
+	document.getElementById('btn-play-again').addEventListener('click', startGame);
+	document.getElementById('btn-share').addEventListener('click', copyScoreAndShare);
+
+	// 点击半透明遮罩关闭弹框
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelp) modalHelp.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 动态构造分享推文/发布内容
+	function getShareMessage() {
+		const maxTitle = getMaxTitle();
+		return `Merged my way up to ${maxTitle} in Programmer 2048! 💻 Can you reach CTO or CEO? Play the game here:`;
+	}
+
+	const GAME_URL = 'https://ethelab.com/games';
+
+	// Twitter (X) 分享
+	document.getElementById('share-twitter').addEventListener('click', () => {
+		const text = encodeURIComponent(getShareMessage());
+		const url = encodeURIComponent(GAME_URL);
+		window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+	});
+
+	// LinkedIn 分享
+	document.getElementById('share-linkedin').addEventListener('click', () => {
+		const url = encodeURIComponent(GAME_URL);
+		window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+	});
+
+	// Copy Link 逻辑带微动画与 Toast 提示
+	document.getElementById('share-copy-link').addEventListener('click', () => {
+		const defaultIcon = document.getElementById('icon-link-default');
+		const successIcon = document.getElementById('icon-link-success');
+
+		navigator.clipboard.writeText(GAME_URL).then(() => {
+			defaultIcon.classList.add('hidden');
+			successIcon.classList.remove('hidden');
+			showToast('Game link copied to clipboard!');
+			setTimeout(() => {
+				defaultIcon.classList.remove('hidden');
+				successIcon.classList.add('hidden');
+			}, 2000);
+		});
+	});
+
+	// 初始化游戏
+	startGame();
+
+</body>
+</html>

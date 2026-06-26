@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Sweeper | Geek Games | HTML5 Game</title>
+  <meta name="description" content="Resolve syntax bugs in the production grid. Play Code Sweeper, a developer-themed Minesweeper remake free and unblocked.">
+  <!-- Tailwind CSS v3 CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tabler Icons CSS CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <script>
+    // 配置 Tailwind CSS
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            border: 'rgba(255,255,255,0.1)',
+            input: 'rgba(255,255,255,0.1)',
+            ring: '#f97316',
+            background: '#09090b',
+            foreground: '#fafafa',
+            primary: {
+              DEFAULT: '#f97316',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            destructive: {
+              DEFAULT: '#ef4444',
+              foreground: '#fafafa',
+            },
+            muted: {
+              DEFAULT: '#27272a',
+              foreground: '#a1a1aa',
+            },
+            accent: {
+              DEFAULT: '#27272a',
+              foreground: '#fafafa',
+            },
+            popover: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+            card: {
+              DEFAULT: '#09090b',
+              foreground: '#fafafa',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 全局样式重置与覆盖 */
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #fafafa;
+    }
+    
+    /* 游戏内置样式 */
+    
+  </style>
+</head>
+<body class="bg-zinc-950 text-foreground min-h-screen">
+  
+	<!-- JSON-LD 结构化数据 (SEO Rich Snippets) -->
+	<script type="application/ld+json" is:inline>
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Sweeper",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Resolve syntax bugs in the production grid. Play Code Sweeper, a developer-themed Minesweeper remake free and unblocked.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	</script>
+
+	<div class="relative min-h-[calc(100vh-5rem)] py-8 flex flex-col justify-between items-center overflow-hidden">
+		<!-- 背景炫光装饰 -->
+		<div class="absolute inset-0 -z-10 bg-radial-gradient from-primary/5 via-transparent to-transparent opacity-40 dark:opacity-30"></div>
+
+		<!-- 游戏主容器 -->
+		<div class="w-full max-w-xl px-4 flex flex-col items-center gap-6">
+			
+			
+			<div class="w-full flex items-center justify-between border-b pb-4">
+				<a
+					href="https://ethelab.com/games"
+					data-astro-reload
+					class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground font-medium"
+				>
+					<i class="ti ti-arrow-left " style="font-size: 16px;"></i>
+					Back to Hub
+				</a>
+				
+				<h1 class="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+					<i class="ti ti-braces text-primary animate-pulse"></i>
+					Code Sweeper
+				</h1>
+
+				<button
+					id="btn-help"
+					type="button"
+					aria-label="How to play"
+					class="size-9 rounded-xl border border-border/80 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+				>
+					<i class="ti ti-help " style="font-size: 18px;"></i>
+				</button>
+			</div>
+
+			
+			<div class="w-full flex flex-wrap items-center justify-between gap-4 bg-card border rounded-2xl p-4 shadow-sm">
+				<div class="flex items-center gap-2">
+					<span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Difficulty:</span>
+					<div class="flex bg-muted/65 p-1 rounded-xl border border-border/40">
+						<button id="diff-easy" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm">
+							Easy
+						</button>
+						<button id="diff-medium" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							Medium
+						</button>
+						<button id="diff-hard" class="diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground">
+							Hard
+						</button>
+					</div>
+				</div>
+
+				<button
+					id="btn-restart"
+					class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95"
+				>
+					<i class="ti ti-refresh " style="font-size: 16px;"></i>
+					Restart
+				</button>
+			</div>
+
+			
+			<div class="w-full grid grid-cols-2 gap-4">
+				<div class="bg-card border rounded-2xl p-4 text-center shadow-sm relative overflow-hidden group">
+					<span class="text-xs uppercase font-bold text-muted-foreground tracking-wider block">Remaining Bugs</span>
+					<span id="bug-count-val" class="text-3xl font-black text-red-500 mt-1 block">10</span>
+				</div>
+				<div class="bg-card border rounded-2xl p-4 text-center shadow-sm relative overflow-hidden group">
+					<span class="text-xs uppercase font-bold text-muted-foreground tracking-wider block">Deploy Time</span>
+					<span id="timer-val" class="text-3xl font-black text-foreground mt-1 block">0s</span>
+				</div>
+			</div>
+
+			
+			<div 
+				id="sweeper-grid-container" 
+				class="w-full bg-zinc-950 border border-border/80 rounded-2xl p-4 shadow-2xl overflow-x-auto flex justify-center items-center select-none"
+			>
+				<div id="sweeper-grid" class="grid gap-1.5 mx-auto">
+					<!-- 动态生成网格格子 -->
+				</div>
+			</div>
+
+			
+			<div class="text-xs text-muted-foreground/80 flex flex-wrap justify-center gap-4 text-center">
+				<span class="flex items-center gap-1"><i class="ti ti-mouse text-primary" style="font-size: 14px;"></i> Left-Click: Compile/Open Cell</span>
+				<span class="flex items-center gap-1"><i class="ti ti-shield text-green-500" style="font-size: 14px;"></i> Right-Click: Hotfix/Flag Bug</span>
+			</div>
+
+			
+			<div class="w-full grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground leading-relaxed">
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-help text-primary" style="font-size: 16px;"></i>
+						How to Play
+					</h3>
+					<ul class="list-disc pl-4 space-y-1.5">
+						<li>Open cells by left-clicking (or tapping on mobile).</li>
+						<li>The number on an open cell shows how many <strong class="text-red-500">Syntax Bugs</strong> are in its adjacent cells.</li>
+						<li>If you suspect a cell contains a bug, right-click (or long press on mobile) to mark it with a <strong class="text-green-500">Hotfix Shield</strong>.</li>
+						<li>Open all clean cells without triggering a Bug to successfully deploy the build!</li>
+					</ul>
+				</div>
+				<div class="p-5 rounded-2xl bg-card border shadow-sm space-y-2">
+					<h3 class="font-bold text-foreground text-sm flex items-center gap-1.5">
+						<i class="ti ti-bug text-primary" style="font-size: 16px;"></i>
+						About Code Sweeper
+					</h3>
+					<p>
+						<strong>Code Sweeper</strong> reimagines the retro Minesweeper grid with a software engineering twist. Instead of mines, navigate around syntax exceptions and compiler errors to clean your repository.
+					</p>
+					<p>
+						Choose between <strong>Easy (8x8)</strong>, <strong>Medium (10x10)</strong>, or <strong>Hard (12x12)</strong> grids. Track your development deploy time, safely flag bugs, and avoid a system-wide production crash.
+					</p>
+				</div>
+			</div>
+
+		</div>
+
+		
+		<div id="modal-help-detail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+				<div class="flex items-center justify-between border-b pb-3">
+					<h3 class="text-lg font-bold text-foreground">Code Sweeper Rules</h3>
+					<button id="close-help-detail" class="text-muted-foreground hover:text-foreground cursor-pointer">
+						<i class="ti ti-x " style="font-size: 20px;"></i>
+					</button>
+				</div>
+				<div class="mt-4 text-sm text-muted-foreground space-y-3 leading-relaxed">
+					<p>To compile the system cleanly:</p>
+					<ul class="list-disc pl-5 space-y-1.5">
+						<li><strong>Empty Grid Cells</strong>: Contain no compile issues.</li>
+						<li><strong>Numbered Cells</strong>: 1 to 8 represent the number of adjacent bugs.</li>
+						<li><strong>Bug (Red Spider)</strong>: Clicking a bug triggers a production stack crash and ends the game.</li>
+						<li><strong>Hotfix (Green Shield)</strong>: Locks a cell to prevent accidental clicks.</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		
+		<div id="modal-gameover" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm hidden">
+			<div class="w-full max-w-sm bg-card border rounded-2xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 duration-200">
+				<h3 id="gameover-title" class="text-2xl font-black text-primary">BUILD COMPILED! 🚀</h3>
+				<p id="gameover-subtitle" class="text-sm text-muted-foreground mt-2">All syntax bugs successfully isolated and hotfixed.</p>
+				
+				<div class="my-6 p-4 rounded-xl bg-muted/40 border border-border/60">
+					<span class="text-xs uppercase tracking-wider text-muted-foreground block mb-1">Time Elapsed</span>
+					<span id="gameover-time" class="text-3xl font-black text-primary">0s</span>
+					<span id="gameover-record-msg" class="block text-xs text-muted-foreground mt-2">
+						System deployed cleanly without crash.
+					</span>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						id="btn-share"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition-all duration-200 hover:bg-primary/95 cursor-pointer"
+					>
+						<i class="ti ti-share " style="font-size: 16px;"></i>
+						Copy Log & Share
+					</button>
+					<button
+						id="btn-play-again"
+						class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-muted border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+					>
+						Re-Deploy (Play Again)
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Toast 浮层提示 -->
+		<div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-primary-foreground shadow-lg flex items-center gap-1.5 opacity-0 scale-95 pointer-events-none transition-all duration-300">
+			<i class="ti ti-circle-check " style="font-size: 16px;"></i>
+			<span id="toast-text">Copied to clipboard!</span>
+		</div>
+	</div>
+
+  
+  
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Code Sweeper",
+			"operatingSystem": "Any",
+			"applicationCategory": "GameApplication",
+			"browserRequirements": "requires HTML5 and JavaScript support",
+			"description": "Resolve syntax bugs in the production grid. Play Code Sweeper, a developer-themed Minesweeper remake free and unblocked.",
+			"genre": "Puzzle Game",
+			"offers": {
+				"@type": "Offer",
+				"price": "0",
+				"priceCurrency": "USD"
+			}
+		}
+	
+
+
+	// 游戏难度设置
+	const DIFFICULTIES = {
+		easy: { rows: 8, cols: 8, bugs: 10 },
+		medium: { rows: 10, cols: 10, bugs: 20 },
+		hard: { rows: 12, cols: 12, bugs: 35 }
+	};
+
+	let currentDiff = 'easy';
+	let rows = DIFFICULTIES.easy.rows;
+	let cols = DIFFICULTIES.easy.cols;
+	let totalBugs = DIFFICULTIES.easy.bugs;
+
+	// 状态变量
+	let board = [];
+	let isGameOver = false;
+	let isGameWon = false;
+	let firstClick = true;
+	let timeLeft = 0;
+	let timerInterval = null;
+	let flagsCount = 0;
+
+	// DOM 引用
+	const gridContainer = document.getElementById('sweeper-grid');
+	const bugCountVal = document.getElementById('bug-count-val');
+	const timerVal = document.getElementById('timer-val');
+	const btnRestart = document.getElementById('btn-restart');
+	const btnHelp = document.getElementById('btn-help');
+	const modalHelpDetail = document.getElementById('modal-help-detail');
+	const closeModalHelpDetail = document.getElementById('close-help-detail');
+	
+	const modalGameOver = document.getElementById('modal-gameover');
+	const gameoverTitle = document.getElementById('gameover-title');
+	const gameoverSubtitle = document.getElementById('gameover-subtitle');
+	const gameoverTime = document.getElementById('gameover-time');
+	const btnPlayAgain = document.getElementById('btn-play-again');
+	const btnShare = document.getElementById('btn-share');
+	
+	const toast = document.getElementById('toast-message');
+	const toastText = document.getElementById('toast-text');
+
+	// 难度按钮
+	const diffEasyBtn = document.getElementById('diff-easy');
+	const diffMediumBtn = document.getElementById('diff-medium');
+	const diffHardBtn = document.getElementById('diff-hard');
+
+	function selectDifficulty(diff) {
+		currentDiff = diff;
+		rows = DIFFICULTIES[diff].rows;
+		cols = DIFFICULTIES[diff].cols;
+		totalBugs = DIFFICULTIES[diff].bugs;
+
+		// 更新 UI 样式
+		const btns = [diffEasyBtn, diffMediumBtn, diffHardBtn];
+		btns.forEach(btn => {
+			btn.className = 'diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer text-muted-foreground hover:text-foreground';
+		});
+		
+		const activeBtn = document.getElementById(`diff-${diff}`);
+		activeBtn.className = 'diff-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer bg-background text-foreground shadow-sm';
+
+		initGame();
+	}
+
+	diffEasyBtn.addEventListener('click', () => selectDifficulty('easy'));
+	diffMediumBtn.addEventListener('click', () => selectDifficulty('medium'));
+	diffHardBtn.addEventListener('click', () => selectDifficulty('hard'));
+
+	// 初始化网格和状态
+	function initGame() {
+		clearInterval(timerInterval);
+		timerInterval = null;
+		timeLeft = 0;
+		timerVal.textContent = '0s';
+		isGameOver = false;
+		isGameWon = false;
+		firstClick = true;
+		flagsCount = 0;
+		bugCountVal.textContent = totalBugs;
+		modalGameOver.classList.add('hidden');
+
+		// 构建内部网格状态
+		board = [];
+		for (let r = 0; r < rows; r++) {
+			let row = [];
+			for (let c = 0; c < cols; c++) {
+				row.push({
+					row: r,
+					col: c,
+					isBug: false,
+					isRevealed: false,
+					isFlagged: false,
+					neighborBugs: 0
+				});
+			}
+			board.push(row);
+		}
+
+		renderBoard();
+	}
+
+	// 渲染 DOM 网格
+	function renderBoard() {
+		gridContainer.innerHTML = '';
+		gridContainer.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+		gridContainer.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+
+		// 设置合适的尺寸，防止手机溢出
+		const cellSize = rows > 10 ? 'size-7 sm:size-9' : 'size-8 sm:size-10';
+
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				const cell = board[r][c];
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = `flex items-center justify-center rounded-lg border font-mono font-bold text-xs sm:text-sm transition-all duration-150 cursor-pointer select-none ${cellSize} `;
+				
+				// 状态赋予对应的类名
+				if (cell.isRevealed) {
+					if (cell.isBug) {
+						btn.className += 'bg-red-500/25 border-red-500/50 text-red-500';
+						btn.innerHTML = '👾';
+					} else {
+						btn.className += 'bg-zinc-900 border-zinc-800 text-zinc-400';
+						if (cell.neighborBugs > 0) {
+							btn.textContent = cell.neighborBugs;
+							// 给不同数字标颜色
+							const colors = [
+								'text-blue-400', // 1
+								'text-green-400', // 2
+								'text-red-400', // 3
+								'text-purple-400', // 4
+								'text-yellow-400', // 5
+								'text-cyan-400', // 6
+								'text-orange-400', // 7
+								'text-pink-400' // 8
+							];
+							btn.className += ' ' + colors[cell.neighborBugs - 1];
+						} else {
+							btn.textContent = '';
+						}
+					}
+				} else {
+					// 未点击状态
+					if (cell.isFlagged) {
+						btn.className += 'bg-green-950/40 border-green-500/40 text-green-500 shadow-inner scale-95';
+						btn.innerHTML = '🛡️';
+					} else {
+						btn.className += 'bg-zinc-800/80 border-zinc-700/60 hover:bg-zinc-700 hover:border-zinc-500 text-transparent';
+						btn.textContent = '//';
+					}
+				}
+
+				// 点击事件
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					handleCellLeftClick(r, c);
+				});
+				btn.addEventListener('contextmenu', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					handleCellRightClick(r, c);
+				});
+
+				// 支持移动端长按插旗 (结合 touchmove 清除防滑屏)
+				let touchTimer = null;
+				let isLongTouch = false;
+				btn.addEventListener('touchstart', (e) => {
+					isLongTouch = false;
+					touchTimer = setTimeout(() => {
+						isLongTouch = true;
+						handleCellRightClick(r, c);
+					}, 500); // 500ms 长按判定
+				}, { passive: true });
+				btn.addEventListener('touchmove', () => {
+					if (touchTimer) {
+						clearTimeout(touchTimer);
+						touchTimer = null;
+					}
+				});
+				btn.addEventListener('touchend', (e) => {
+					if (touchTimer) {
+						clearTimeout(touchTimer);
+						touchTimer = null;
+					}
+					if (isLongTouch) {
+						e.preventDefault();
+					}
+				});
+
+				gridContainer.appendChild(btn);
+			}
+		}
+	}
+
+	// 部署 Bug (避开首次点击格子)
+	function placeBugs(firstRow, firstCol) {
+		let bugsPlaced = 0;
+		while (bugsPlaced < totalBugs) {
+			const r = Math.floor(Math.random() * rows);
+			const c = Math.floor(Math.random() * cols);
+
+			// 避开首次点击的格子及其周围 3x3 区域，给用户一个良好的起始开局
+			const isAdjacent = Math.abs(r - firstRow) <= 1 && Math.abs(c - firstCol) <= 1;
+
+			if (!board[r][c].isBug && !isAdjacent) {
+				board[r][c].isBug = true;
+				bugsPlaced++;
+			}
+		}
+
+		// 计算周围格子 Bug 数量
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				if (!board[r][c].isBug) {
+					board[r][c].neighborBugs = countNeighbors(r, c);
+				}
+			}
+		}
+	}
+
+	function countNeighbors(row, col) {
+		let count = 0;
+		for (let dr = -1; dr <= 1; dr++) {
+			for (let dc = -1; dc <= 1; dc++) {
+				const nr = row + dr;
+				const nc = col + dc;
+				if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+					if (board[nr][nc].isBug) count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	// 启动定时器
+	function startTimer() {
+		timerInterval = setInterval(() => {
+			timeLeft++;
+			timerVal.textContent = timeLeft + 's';
+		}, 1000);
+	}
+
+	// 左击翻开逻辑
+	function handleCellLeftClick(r, c) {
+		if (isGameOver || isGameWon) return;
+		const cell = board[r][c];
+		if (cell.isRevealed || cell.isFlagged) return;
+
+		// 首次点击避雷
+		if (firstClick) {
+			firstClick = false;
+			placeBugs(r, c);
+			startTimer();
+		}
+
+		revealCell(r, c);
+		checkWinCondition();
+		renderBoard();
+	}
+
+	// 递归翻开格子 (Flood Fill)
+	function revealCell(r, c) {
+		const cell = board[r][c];
+		cell.isRevealed = true;
+
+		if (cell.isBug) {
+			triggerGameOver();
+			return;
+		}
+
+		if (cell.neighborBugs === 0) {
+			for (let dr = -1; dr <= 1; dr++) {
+				for (let dc = -1; dc <= 1; dc++) {
+					const nr = r + dr;
+					const nc = c + dc;
+					if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+						const neighbor = board[nr][nc];
+						if (!neighbor.isRevealed && !neighbor.isFlagged) {
+							revealCell(nr, nc);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 右击标记插旗
+	let lastRightClickTime = 0;
+	function handleCellRightClick(r, c) {
+		const now = Date.now();
+		if (now - lastRightClickTime < 200) {
+			return; // 200ms 防抖锁定，防止触控板右击/长按等双重触发导致秒插秒撤
+		}
+		lastRightClickTime = now;
+
+		if (isGameOver || isGameWon) return;
+		const cell = board[r][c];
+		if (cell.isRevealed) return;
+
+		if (firstClick) {
+			// 插旗不触发首击避雷，但我们也可以选择触发定时器
+			firstClick = false;
+			placeBugs(-1, -1); // 随便布雷，无需避开
+			startTimer();
+		}
+
+		cell.isFlagged = !cell.isFlagged;
+		flagsCount += cell.isFlagged ? 1 : -1;
+		bugCountVal.textContent = Math.max(0, totalBugs - flagsCount);
+		
+		renderBoard();
+	}
+
+	// 判断胜利条件
+	function checkWinCondition() {
+		let revealedCount = 0;
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				if (board[r][c].isRevealed && !board[r][c].isBug) {
+					revealedCount++;
+				}
+			}
+		}
+
+		const totalSafeCells = (rows * cols) - totalBugs;
+		if (revealedCount === totalSafeCells) {
+			triggerGameWon();
+		}
+	}
+
+	// 踩雷失败
+	function triggerGameOver() {
+		isGameOver = true;
+		clearInterval(timerInterval);
+
+		// 翻开所有的雷以示警示
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				if (board[r][c].isBug) {
+					board[r][c].isRevealed = true;
+				}
+			}
+		}
+
+		// 弹出结算
+		gameoverTitle.textContent = 'BUILD FAILED! 👾';
+		gameoverTitle.className = 'text-2xl font-black text-red-500';
+		gameoverSubtitle.textContent = 'A syntax exception crashed the production branch.';
+		gameoverTime.textContent = timeLeft + 's';
+		document.getElementById('gameover-record-msg').textContent = 'Please isolate and patch bugs to build successfully.';
+
+		setTimeout(() => {
+			modalGameOver.classList.remove('hidden');
+		}, 600);
+	}
+
+	// 胜利通关
+	function triggerGameWon() {
+		isGameWon = true;
+		clearInterval(timerInterval);
+
+		// 将所有雷自动插旗锁定
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				if (board[r][c].isBug) {
+					board[r][c].isFlagged = true;
+				}
+			}
+		}
+		bugCountVal.textContent = '0';
+
+		// 弹出结算
+		gameoverTitle.textContent = 'BUILD COMPILED! 🚀';
+		gameoverTitle.className = 'text-2xl font-black text-green-500 animate-pulse';
+		gameoverSubtitle.textContent = 'All compiler errors resolve. System deployed successfully.';
+		gameoverTime.textContent = timeLeft + 's';
+		document.getElementById('gameover-record-msg').textContent = `Build deployed on difficulty: ${currentDiff.toUpperCase()}.`;
+
+		setTimeout(() => {
+			modalGameOver.classList.remove('hidden');
+		}, 600);
+	}
+
+	// Toast 消息
+	function showToast(text) {
+		if (!toast || !toastText) return;
+		toastText.textContent = text;
+		toast.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+		toast.classList.add('opacity-100', 'scale-100');
+		setTimeout(() => {
+			toast.classList.remove('opacity-100', 'scale-100');
+			toast.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+		}, 2000);
+	}
+
+	// 分享得分数据
+	function copyScoreAndShare() {
+		const timeText = timeLeft + 's';
+		const diffText = currentDiff.toUpperCase();
+		const statusText = isGameWon ? 'SUCCESS 🚀' : 'CRASHED 👾';
+		
+		const shareText = `🛡️ Code Sweeper on EtheLab 💻\n\nBuild Status: ${statusText}\nDifficulty: ${diffText}\nDeploy Time: ${timeText}\n\nCan you compile without syntax bugs? Play here: https://ethelab.com/games/sweeper`;
+		
+		navigator.clipboard.writeText(shareText).then(() => {
+			showToast('Build report copied to clipboard!');
+		}).catch(() => {
+			showToast('Failed to copy build report.');
+		});
+	}
+
+	// 绑定监听器
+	btnRestart.addEventListener('click', initGame);
+	btnPlayAgain.addEventListener('click', initGame);
+	btnShare.addEventListener('click', copyScoreAndShare);
+	
+	btnHelp.addEventListener('click', () => modalHelpDetail.classList.remove('hidden'));
+	closeModalHelpDetail.addEventListener('click', () => modalHelpDetail.classList.add('hidden'));
+
+	window.addEventListener('click', (e) => {
+		if (e.target === modalHelpDetail) modalHelpDetail.classList.add('hidden');
+		if (e.target === modalGameOver) modalGameOver.classList.add('hidden');
+	});
+
+	// 开始
+	initGame();
+
+</body>
+</html>
