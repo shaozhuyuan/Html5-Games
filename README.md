@@ -61,5 +61,7 @@ You can deploy this entire gaming suite in seconds to **GitHub Pages**, **Vercel
 ## 🤝 Contribution & Feedback
 If you have any game ideas, bug reports, or performance feedback, feel free to open an issue or submit a pull request!
 
+⭐ **If you like this project, please give it a star! It really helps support the repository!**
+
 ---
 *Maintained with ❤️ by [EtheLab](https://ethelab.com).*
