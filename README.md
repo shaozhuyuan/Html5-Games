@@ -1,5 +1,7 @@
 # 🎮 Classic HTML5 Geek Games Collection
 
+[English](README.md) | [简体中文](README_zh.md)
+
 Welcome to the **HTML5 Games** repository! This is a curated collection of light, zero-dependency, ultra-smooth mini-games designed especially for developers and tech enthusiasts. 
 
 Each game is written in pure vanilla JavaScript/HTML5 and styled beautifully using Tailwind CSS. They are 100% free, 100% ad-free, and load instantly on both mobile and desktop browsers.
