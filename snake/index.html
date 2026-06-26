@@ -233,8 +233,8 @@
 						title="Copy Game Link"
 						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer relative"
 					>
-						<i class="ti ti-link " style="font-size: 16px;"></i>
-						<i class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
+						<i id="icon-link-default" class="ti ti-link " style="font-size: 16px;"></i>
+						<i id="icon-link-success" class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
 					</button>
 				</div>
 			</div>
@@ -305,26 +305,7 @@
 		</div>
 	</div>
 
-  
-  
-		{
-			"@context": "https://schema.org",
-			"@type": "SoftwareApplication",
-			"name": "Code Snake",
-			"operatingSystem": "Any",
-			"applicationCategory": "GameApplication",
-			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
-			"description": "Hunt bugs and compile code packages to grow your code base. Watch out for compiler walls and infinite loops!",
-			"genre": "Retro Game",
-			"offers": {
-				"@type": "Offer",
-				"price": "0",
-				"priceCurrency": "USD"
-			}
-		}
-	
-
-
+	<script>
 	// 游戏状态配置
 	const canvas = document.getElementById('game-canvas');
 	const ctx = canvas.getContext('2d');
@@ -692,6 +673,7 @@
 	// 启动游戏状态
 	resetGame();
 	renderLoop();
+	</script>
 
 </body>
 </html>

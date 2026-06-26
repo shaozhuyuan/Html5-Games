@@ -244,8 +244,8 @@
 						title="Copy Game Link"
 						class="size-8 rounded-lg border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer relative"
 					>
-						<i class="ti ti-link " style="font-size: 16px;"></i>
-						<i class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
+						<i id="icon-link-default" class="ti ti-link " style="font-size: 16px;"></i>
+						<i id="icon-link-success" class="ti ti-check text-green-500 hidden" style="font-size: 16px;"></i>
 					</button>
 				</div>
 			</div>
@@ -365,24 +365,7 @@
 
   
   
-		{
-			"@context": "https://schema.org",
-			"@type": "SoftwareApplication",
-			"name": "Programmer 2048",
-			"operatingSystem": "Any",
-			"applicationCategory": "GameApplication",
-			"browserRequirements": "requires HTML5 Canvas and JavaScript support",
-			"description": "Can you reach the C-suite? Merge developer titles from Intern to CTO and CEO in this geeky 2048 brain teaser.",
-			"genre": "Puzzle Game",
-			"offers": {
-				"@type": "Offer",
-				"price": "0",
-				"priceCurrency": "USD"
-			}
-		}
-	
-
-
+	<script>
 	// 职业等级配置
 	const TITLE_MAP = {
 		2: { name: 'Intern', class: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200' },
@@ -776,6 +759,7 @@
 
 	// 初始化游戏
 	startGame();
+	</script>
 
 </body>
 </html>
