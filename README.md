@@ -51,7 +51,7 @@ Since each game is completely self-contained within a single `index.html` file (
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_GITHUB_USERNAME/Html5-Games.git
+   git clone https://github.com/shaozhuyuan/Html5-Games.git
    ```
 2. Open any game folder (e.g., `/2048`) and double-click the `index.html` file to launch it directly in your web browser.
 

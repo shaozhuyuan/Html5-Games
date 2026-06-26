@@ -51,7 +51,7 @@
 
 1. 克隆本仓库：
    ```bash
-   git clone https://github.com/YOUR_GITHUB_USERNAME/Html5-Games.git
+   git clone https://github.com/shaozhuyuan/Html5-Games.git
    ```
 2. 进入任一游戏文件夹（例如 `/2048`），双击 `index.html` 文件即可在你的浏览器中直接运行游戏。
 
